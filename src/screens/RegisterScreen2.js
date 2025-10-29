@@ -17,17 +17,23 @@ import IconInput from "../components/IconInput";
 import FooterDecor from "../components/FooterDecor";
 import { palette, shadow, radius, spacing } from "../theme/theme";
 
-export default function LoginScreen({ navigation }) {
+export default function RegisterScreen({ navigation }) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const onLogin = async () => {
+  const onRegister = async () => {
     try {
       setLoading(true);
-      const res = await apiPost("/api/auth/login", { email, password });
-      Alert.alert("Thành công", "Đăng nhập thành công");
+      const res = await apiPost("/api/auth/register", {
+        name,
+        email,
+        password,
+      });
+      Alert.alert("Thành công", "Đăng ký thành công");
       console.log("TOKEN", res.token);
+      navigation.replace("Login");
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
@@ -38,7 +44,6 @@ export default function LoginScreen({ navigation }) {
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.screen}>
-        {/* Hero header with splashy gradient and decorative circles */}
         <View style={styles.heroWrap}>
           <LinearGradient
             colors={[palette.primaryLight, "#EAFBF0"]}
@@ -60,47 +65,51 @@ export default function LoginScreen({ navigation }) {
                 ]}
               />
             </View>
-            {/* Football watermark to emphasize theme */}
             <Ionicons
               name="football"
               size={96}
               color="rgba(255,255,255,0.85)"
               style={styles.ballIcon}
             />
-            <Text style={styles.heroTitle}>Welcome Back</Text>
-            <Text style={styles.heroSub}>Book venues with the best offers</Text>
+            <Text style={styles.heroTitle}>Create Account</Text>
+            <Text style={styles.heroSub}>Join and start booking today</Text>
           </LinearGradient>
 
-          {/* Segmented switch - simple, calm style */}
           <View style={styles.segment}>
-            <View style={[styles.segmentBtn, styles.segmentActive]}>
-              <Text style={[styles.segmentText, styles.segmentTextActive]}>
-                Đăng nhập
-              </Text>
-            </View>
             <TouchableOpacity
               style={styles.segmentBtn}
-              onPress={() => navigation.replace("Register")}
+              onPress={() => navigation.replace("Login")}
             >
-              <Text style={styles.segmentText}>Đăng ký</Text>
+              <Text style={styles.segmentText}>Đăng nhập</Text>
             </TouchableOpacity>
+            <View style={[styles.segmentBtn, styles.segmentActive]}>
+              <Text style={[styles.segmentText, styles.segmentTextActive]}>
+                Đăng ký
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Card content inside a ScrollView so keyboard doesn't cover fields */}
         <ScrollView
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={{ paddingBottom: spacing.xl }}
         >
           <View style={styles.card}>
             <IconInput
+              icon="person-outline"
+              placeholder="Họ và tên"
+              value={name}
+              onChangeText={setName}
+              autoCapitalize="words"
+            />
+            <IconInput
               icon="mail-outline"
               placeholder="you@example.com"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
+              style={{ marginTop: spacing.md }}
             />
-
             <IconInput
               icon="lock-closed-outline"
               placeholder="Mật khẩu"
@@ -110,35 +119,22 @@ export default function LoginScreen({ navigation }) {
               style={{ marginTop: spacing.md }}
             />
 
-            <View style={styles.rowBetween}>
-              <View style={styles.rowCenter}>
-                <Ionicons
-                  name="checkmark-circle"
-                  color={palette.primaryDark}
-                  size={18}
-                />
-                <Text style={styles.mutedSmall}> Nhớ đăng nhập</Text>
-              </View>
-              <TouchableOpacity>
-                <Text
-                  style={[
-                    styles.mutedSmall,
-                    { color: palette.primaryDark, fontWeight: "700" },
-                  ]}
-                >
-                  Quên mật khẩu?
-                </Text>
-              </TouchableOpacity>
+            <View style={[styles.rowCenter, { marginTop: spacing.sm }]}>
+              <Ionicons
+                name="shield-checkmark-outline"
+                size={18}
+                color={palette.primaryDark}
+              />
+              <Text style={styles.mutedSmall}> 8+ ký tự, gồm chữ và số</Text>
             </View>
 
             <GradientButton
-              title={loading ? "Đang xử lý..." : "Đăng nhập"}
-              onPress={onLogin}
+              title={loading ? "Đang xử lý..." : "Đăng ký"}
+              onPress={onRegister}
               disabled={loading}
               style={{ marginTop: spacing.lg }}
             />
 
-            {/* Social row */}
             <View style={styles.socialRow}>
               <View style={styles.socialBtn}>
                 <Ionicons name="logo-google" size={18} color="#EA4335" />
@@ -153,18 +149,18 @@ export default function LoginScreen({ navigation }) {
 
             <TouchableOpacity
               style={styles.linkBtn}
-              onPress={() => navigation.navigate("Register")}
+              onPress={() => navigation.navigate("Login")}
             >
               <Text style={styles.linkText}>
-                Chưa có tài khoản?{" "}
+                Đã có tài khoản?{" "}
                 <Text style={{ color: palette.primaryDark, fontWeight: "700" }}>
-                  Đăng ký
+                  Đăng nhập
                 </Text>
               </Text>
             </TouchableOpacity>
           </View>
+          <FooterDecor />
         </ScrollView>
-        <FooterDecor />
       </View>
     </TouchableWithoutFeedback>
   );
@@ -192,6 +188,14 @@ const styles = StyleSheet.create({
   heroTitle: { color: palette.text, fontSize: 22, fontWeight: "800" },
   heroSub: { color: palette.sub, marginTop: 4 },
   ballIcon: { position: "absolute", right: 24, top: 40 },
+  card: {
+    backgroundColor: palette.card,
+    marginHorizontal: spacing.lg,
+    marginTop: -spacing.lg,
+    padding: spacing.lg,
+    borderRadius: radius.xl,
+    ...shadow.card,
+  },
   segment: {
     backgroundColor: "#FFFFFF",
     alignSelf: "center",
@@ -209,20 +213,6 @@ const styles = StyleSheet.create({
   segmentActive: { backgroundColor: palette.primary },
   segmentText: { color: palette.sub, fontWeight: "700" },
   segmentTextActive: { color: "#fff" },
-  card: {
-    backgroundColor: palette.card,
-    marginHorizontal: spacing.lg,
-    marginTop: -spacing.lg,
-    padding: spacing.lg,
-    borderRadius: radius.xl,
-    ...shadow.card,
-  },
-  rowBetween: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: spacing.sm,
-  },
   rowCenter: { flexDirection: "row", alignItems: "center" },
   mutedSmall: { color: palette.sub, fontSize: 12 },
   socialRow: {
