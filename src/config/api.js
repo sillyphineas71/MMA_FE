@@ -24,8 +24,8 @@ function resolveBaseURL() {
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
-  // 4) Fallback: ask user to set env if detection fails
-  return "http://192.168.1.100:9999"; // CHANGE_ME to your PC LAN IP if needed
+  // 4) Fallback: ask user to set env if detection failsr
+  return "http://192.168.68.2:9999"; // CHANGE_ME to your PC LAN IP if needed
 }
 
 export const API_BASE = resolveBaseURL();

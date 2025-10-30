@@ -28,6 +28,8 @@ export default function LoginScreen({ navigation }) {
       const res = await apiPost("/api/auth/login", { email, password });
       Alert.alert("Thành công", "Đăng nhập thành công");
       console.log("TOKEN", res.token);
+      navigation.replace("Dashboard");
+
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
