@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage"; // THÊM
 
-// ... (Hàm resolveBaseURL của bạn giữ nguyên) ...
+// Resolve backend base URL across emulator, simulator and physical devices.
 function resolveBaseURL() {
   const extraApi = Constants.expoConfig?.extra?.apiBase;
   if (extraApi) return extraApi;
@@ -18,16 +18,13 @@ function resolveBaseURL() {
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
-  // 4) Fallback: ask user to set env if detection failsr
+  // 4) Fallback: ask user to set env if detection fails
   return "http://192.168.1.8:9999"; // CHANGE_ME to your PC LAN IP if needed
 }
 
 export const API_BASE = resolveBaseURL();
 
-// === PHẦN CẬP NHẬT ===
-
-// Hàm fetch chung, tự động đính kèm token
-async function apiFetch(path, method, body) {
+export async function apiPost(path, body) {
   const url = `${API_BASE}${path}`;
   const token = await AsyncStorage.getItem("userToken"); // Lấy token
 
@@ -40,7 +37,7 @@ async function apiFetch(path, method, body) {
   }
 
   const options = {
-    method,
+    method: "POST",
     headers,
   };
 
@@ -56,7 +53,6 @@ async function apiFetch(path, method, body) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-
   const text = await res.text();
   let data;
   try {
@@ -69,15 +65,6 @@ async function apiFetch(path, method, body) {
     const message = data?.message || `HTTP ${res.status}`;
     throw new Error(message);
   }
+
   return data;
-}
-
-// Sửa lại apiPost để dùng hàm chung
-export async function apiPost(path, body) {
-  return apiFetch(path, "POST", body);
-}
-
-// Thêm apiGet
-export async function apiGet(path) {
-  return apiFetch(path, "GET", null);
 }
