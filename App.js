@@ -12,6 +12,12 @@ import VenueDetailScreen from "./src/screens/VenueDetailScreen";
 import SlotSelectionScreen from "./src/screens/SlotSelectionScreen";
 import OwnerCalendarScreen from "./src/screens/OwnerCalendarScreen";
 import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
+import OwnerVenueListScreen from "./src/screens/OwnerVenueListScreen";
+import OwnerVenueCreateScreen from "./src/screens/OwnerVenueCreateScreen";
+import OwnerVenueEditScreen from "./src/screens/OwnerVenueEditScreen";
+import OwnerSubPitchListScreen from "./src/screens/OwnerSubPitchListScreen";
+import OwnerSubPitchCreateScreen from "./src/screens/OwnerSubPitchCreateScreen";
+import OwnerSubPitchEditScreen from "./src/screens/OwnerSubPitchEditScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -51,6 +57,30 @@ export default function App() {
           options={{ headerShown: true, title: "Lịch chủ sân" }}
         />
         <Stack.Screen name="Dashboard" component={HomeDashboardScreen} />
+        {/* ===== Owner flow ===== */}
+        <Stack.Screen
+          name="OwnerVenueList"
+          component={OwnerVenueListScreen}
+          options={{ headerShown: true, title: "Quản lý sân" }}
+        />
+        <Stack.Screen name="OwnerVenueCreate" component={OwnerVenueCreateScreen} />
+        <Stack.Screen name="OwnerVenueEdit" component={OwnerVenueEditScreen} />
+        {/* 3. THÊM 3 MÀN HÌNH MỚI (Màn 4) VÀO ĐÂY */}
+        <Stack.Screen
+          name="OwnerSubPitchList" // Đây chính là tên đang bị thiếu
+          component={OwnerSubPitchListScreen}
+          options={{ headerShown: false }} // Đã có header riêng
+        />
+        <Stack.Screen
+          name="OwnerSubPitchCreate"
+          component={OwnerSubPitchCreateScreen}
+          options={{ headerShown: false }} // Đã có header riêng
+        />
+        <Stack.Screen
+          name="OwnerSubPitchEdit"
+          component={OwnerSubPitchEditScreen}
+          options={{ headerShown: false }} // Đã có header riêng
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -16,6 +16,7 @@ import GradientButton from "../components/GradientButton";
 import IconInput from "../components/IconInput";
 import FooterDecor from "../components/FooterDecor";
 import { palette, shadow, radius, spacing } from "../theme/theme";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -28,7 +29,8 @@ export default function LoginScreen({ navigation }) {
       const res = await apiPost("/api/auth/login", { email, password });
       Alert.alert("Thành công", "Đăng nhập thành công");
       console.log("TOKEN", res.token);
-      navigation.replace("Dashboard");
+      await AsyncStorage.setItem("token", res.token);
+      navigation.replace("OwnerVenueList");
 
     } catch (e) {
       Alert.alert("Lỗi", e.message);
