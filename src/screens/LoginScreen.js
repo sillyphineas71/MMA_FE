@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react"; // THÊM useContext
 import {
   View,
   Text,
@@ -9,21 +9,28 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { apiPost } from "../config/api";
-import GradientButton from "../components/GradientButton";
+import GradientButton from "../components/GradientButton"; // Giả sử bạn có file này
 import { palette, shadow, radius, spacing } from "../theme/theme";
+import { useAuth } from "../context/AuthContext"; // THÊM
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth(); // THÊM
 
   const onLogin = async () => {
     try {
       setLoading(true);
       const res = await apiPost("/api/auth/login", { email, password });
-      Alert.alert("Thành công", "Đăng nhập thành công");
-      // TODO: store token in secure storage and navigate to app
-      console.log("TOKEN", res.token);
+
+      // QUAN TRỌNG: API login phải trả về { token: "...", user: { ... } }
+      if (res.token && res.user) {
+        await signIn(res); // Dùng hàm signIn từ context
+        // Navigation sẽ tự động xử lý bởi App.js
+      } else {
+        throw new Error("Phản hồi đăng nhập không hợp lệ (thiếu token hoặc user)");
+      }
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
@@ -31,6 +38,7 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  // ... (Phần return và styles của bạn giữ nguyên, KHÔNG CẦN SỬA) ...
   return (
     <View style={styles.screen}>
       <LinearGradient
