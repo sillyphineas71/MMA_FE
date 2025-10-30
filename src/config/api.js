@@ -25,7 +25,7 @@ function resolveBaseURL() {
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
   // 4) Fallback: ask user to set env if detection failsr
-  return "http://192.168.68.2:9999"; // CHANGE_ME to your PC LAN IP if needed
+  return "http://192.168.137.1:9999"; // CHANGE_ME to your PC LAN IP if needed
 }
 
 export const API_BASE = resolveBaseURL();

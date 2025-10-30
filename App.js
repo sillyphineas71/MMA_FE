@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 
 // 🧩 Auth Screens
 import LoginScreen from "./src/screens/LoginScreen";
-import RegisterScreen from "./src/screens/RegisterScreen";
+import RegisterScreen from "./src/screens/RegisterScreen2";
 
 // ⚽ Booking Screens
 import HomeScreen from "./src/screens/HomeScreen";
