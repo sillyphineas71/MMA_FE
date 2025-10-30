@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react"; // THÊM useContext
 import {
   View,
   Text,
@@ -16,20 +16,25 @@ import GradientButton from "../components/GradientButton";
 import IconInput from "../components/IconInput";
 import FooterDecor from "../components/FooterDecor";
 import { palette, shadow, radius, spacing } from "../theme/theme";
+import { useAuth } from "../context/AuthContext"; // THÊM
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { signIn } = useAuth(); // THÊM
 
   const onLogin = async () => {
     try {
       setLoading(true);
       const res = await apiPost("/api/auth/login", { email, password });
-      Alert.alert("Thành công", "Đăng nhập thành công");
-      console.log("TOKEN", res.token);
-      navigation.replace("Dashboard");
-
+      // API trả về { token: '...', user?: {...} }
+      if (res && res.token) {
+        await signIn(res); // nếu có user sẽ dùng luôn, nếu không sẽ decode token
+        // Root navigator will switch stacks once user is set in context
+      } else {
+        throw new Error(res?.message || "Phản hồi đăng nhập không hợp lệ");
+      }
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
@@ -37,6 +42,7 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  // ... (Phần return và styles của bạn giữ nguyên, KHÔNG CẦN SỬA) ...
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.screen}>
