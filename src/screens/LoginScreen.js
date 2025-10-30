@@ -24,6 +24,7 @@ export default function LoginScreen({ navigation }) {
       Alert.alert("Thành công", "Đăng nhập thành công");
       // TODO: store token in secure storage and navigate to app
       console.log("TOKEN", res.token);
+      navigation.replace("Admin");
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {

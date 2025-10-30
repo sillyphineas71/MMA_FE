@@ -16,6 +16,7 @@ export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
 
   const onRegister = async () => {
@@ -25,6 +26,7 @@ export default function RegisterScreen({ navigation }) {
         name,
         email,
         password,
+        phone,
       });
       Alert.alert("Thành công", "Đăng ký thành công");
       console.log("TOKEN", res.token);
@@ -76,6 +78,15 @@ export default function RegisterScreen({ navigation }) {
           secureTextEntry
           value={password}
           onChangeText={setPassword}
+        />
+        <Text style={styles.label}>Số điện thoại</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="0987 654 321"
+          placeholderTextColor={palette.sub}
+          keyboardType="phone-pad"
+          value={phone}
+          onChangeText={setPhone}
         />
         <GradientButton
           title={loading ? "Đang xử lý..." : "Đăng ký"}
