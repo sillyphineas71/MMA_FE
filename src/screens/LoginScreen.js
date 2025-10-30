@@ -30,7 +30,7 @@ export default function LoginScreen({ navigation }) {
       Alert.alert("Thành công", "Đăng nhập thành công");
       console.log("TOKEN", res.token);
       await AsyncStorage.setItem("token", res.token);
-      navigation.replace("OwnerVenueList");
+      navigation.replace("Dashboard");
 
     } catch (e) {
       Alert.alert("Lỗi", e.message);
