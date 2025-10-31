@@ -31,9 +31,11 @@ export default function RegisterScreen({ navigation }) {
         email,
         password,
       });
-      Alert.alert("Thành công", "Đăng ký thành công");
-      console.log("TOKEN", res.token);
-      navigation.replace("Login");
+      Alert.alert(
+        "Thành công",
+        "Đăng ký thành công. Vui lòng kiểm tra email để nhập mã xác minh."
+      );
+      navigation.replace("VerifyEmail", { email });
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
