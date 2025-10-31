@@ -16,10 +16,10 @@ import { palette } from "./src/theme/theme";
 
 // Auth flow
 import LoginScreen from "./src/screens/LoginScreen";
-import RegisterScreen from "./src/screens/RegisterScreen2"; // dùng file RegisterScreen2
+import RegisterScreen from "./src/screens/RegisterScreen2";
 
 // Admin / Owner dashboards
-import AdminDashboardScreen from "./src/screens/AdminDashboardScreen";
+import AdminStack from "./src/navigation/AdminStack";
 import OwnerDashboardScreen from "./src/screens/OwnerDashboardScreen";
 
 // Booking flow
@@ -63,26 +63,9 @@ function AppStack() {
     </TouchableOpacity>
   );
 
-  // Nếu admin → chỉ cần dashboard admin
+  // Nếu admin → dùng bottom tabs AdminStack
   if (user?.role === "admin") {
-    return (
-      <Stack.Navigator
-        initialRouteName="AdminDashboard"
-        screenOptions={{
-          headerShown: true,
-          animation: "slide_from_right",
-        }}
-      >
-        <Stack.Screen
-          name="AdminDashboard"
-          component={AdminDashboardScreen}
-          options={{
-            title: "Admin Dashboard",
-            headerRight: SignOutButton,
-          }}
-        />
-      </Stack.Navigator>
-    );
+    return <AdminStack />;
   }
 
   // Còn lại coi như chủ sân / khách đặt sân
@@ -149,13 +132,13 @@ function AppStack() {
         }}
       />
 
-      {/* Dashboard tổng hợp / home sau login */}
+      {/* Dashboard trong tài khoản owner trỏ về OwnerDashboardScreen */}
       <Stack.Screen
         name="Dashboard"
-        component={HomeDashboardScreen}
+        component={OwnerDashboardScreen}
         options={{
           headerShown: true,
-          title: "Tổng quan",
+          title: "Owner Dashboard",
           headerRight: SignOutButton,
         }}
       />
