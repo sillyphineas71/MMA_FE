@@ -1,7 +1,5 @@
 import React from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
-import React from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
@@ -22,6 +20,7 @@ import ResetPasswordScreen from "./src/screens/ResetPasswordScreen";
 // Admin (tabs) and Owner/Customer flows
 import AdminStack from "./src/navigation/AdminStack";
 import OwnerDashboardScreen from "./src/screens/OwnerDashboardScreen";
+import OwnerStack from "./src/navigation/OwnerStack";
 
 // Booking flow
 import HomeScreen from "./src/screens/HomeScreen";
@@ -57,25 +56,17 @@ function AppStack() {
   );
 
   // Admin uses dedicated bottom tabs
-  if (user?.role === "admin") {
-    return <AdminStack />;
-  }
+  if (user?.role === "admin") return <AdminStack />;
 
-  // Owner/Customer flow
+  // Owner uses dedicated bottom tabs
+  if (user?.role === "owner") return <OwnerStack />;
+
+  // Customer flow
   return (
     <Stack.Navigator
-      initialRouteName={user?.role === "owner" ? "OwnerDashboard" : "Home"}
+      initialRouteName="Home"
       screenOptions={{ headerShown: false, animation: "slide_from_right" }}
     >
-      <Stack.Screen
-        name="OwnerDashboard"
-        component={OwnerDashboardScreen}
-        options={{
-          headerShown: true,
-          title: "Owner Dashboard",
-          headerRight: SignOutButton,
-        }}
-      />
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -100,24 +91,6 @@ function AppStack() {
         options={{
           headerShown: true,
           title: "Chọn khung giờ",
-          headerRight: SignOutButton,
-        }}
-      />
-      <Stack.Screen
-        name="OwnerCalendar"
-        component={OwnerCalendarScreen}
-        options={{
-          headerShown: true,
-          title: "Lịch chủ sân",
-          headerRight: SignOutButton,
-        }}
-      />
-      <Stack.Screen
-        name="Dashboard"
-        component={OwnerDashboardScreen}
-        options={{
-          headerShown: true,
-          title: "Owner Dashboard",
           headerRight: SignOutButton,
         }}
       />
