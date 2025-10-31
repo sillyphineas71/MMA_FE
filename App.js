@@ -1,27 +1,25 @@
 import React from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
+import React from "react";
+import { TouchableOpacity, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 
-// 🔐 Auth context
+// Auth context
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
-// 🎨 Theme
+// Theme
 import { palette } from "./src/theme/theme";
 
-// ==========================
-// 🧩 Screens import
-// ==========================
-
-// Auth flow
+// Auth flow screens
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen2";
 import VerifyEmailScreen from "./src/screens/VerifyEmailScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/ResetPasswordScreen";
 
-// Admin / Owner dashboards
+// Admin (tabs) and Owner/Customer flows
 import AdminStack from "./src/navigation/AdminStack";
 import OwnerDashboardScreen from "./src/screens/OwnerDashboardScreen";
 
@@ -34,17 +32,11 @@ import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
 
 const Stack = createNativeStackNavigator();
 
-// ---------------------------------
-// Stack cho người dùng CHƯA đăng nhập
-// ---------------------------------
 function AuthStack() {
   return (
     <Stack.Navigator
       initialRouteName="Login"
-      screenOptions={{
-        headerShown: false,
-        animation: "slide_from_right",
-      }}
+      screenOptions={{ headerShown: false, animation: "slide_from_right" }}
     >
       <Stack.Screen name="Login" component={LoginScreen} />
       <Stack.Screen name="Register" component={RegisterScreen} />
@@ -55,35 +47,26 @@ function AuthStack() {
   );
 }
 
-// ---------------------------------
-// Stack cho người dùng ĐÃ đăng nhập
-// (phụ thuộc role: admin / owner)
-// ---------------------------------
 function AppStack() {
   const { user, signOut } = useAuth();
 
-  // nút logout hiển thị trên headerRight
   const SignOutButton = () => (
     <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
       <Feather name="log-out" size={20} color={palette.primaryDark} />
     </TouchableOpacity>
   );
 
-  // Nếu admin → dùng bottom tabs AdminStack
+  // Admin uses dedicated bottom tabs
   if (user?.role === "admin") {
     return <AdminStack />;
   }
 
-  // Còn lại coi như chủ sân / khách đặt sân
+  // Owner/Customer flow
   return (
     <Stack.Navigator
       initialRouteName={user?.role === "owner" ? "OwnerDashboard" : "Home"}
-      screenOptions={{
-        headerShown: false,
-        animation: "slide_from_right",
-      }}
+      screenOptions={{ headerShown: false, animation: "slide_from_right" }}
     >
-      {/* Owner tổng quan */}
       <Stack.Screen
         name="OwnerDashboard"
         component={OwnerDashboardScreen}
@@ -93,8 +76,6 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
-
-      {/* Trang home cho người dùng đặt sân */}
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -104,8 +85,6 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
-
-      {/* Chi tiết sân */}
       <Stack.Screen
         name="VenueDetail"
         component={VenueDetailScreen}
@@ -115,8 +94,6 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
-
-      {/* Chọn khung giờ */}
       <Stack.Screen
         name="SlotSelection"
         component={SlotSelectionScreen}
@@ -126,8 +103,6 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
-
-      {/* Lịch của chủ sân */}
       <Stack.Screen
         name="OwnerCalendar"
         component={OwnerCalendarScreen}
@@ -137,8 +112,6 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
-
-      {/* Dashboard trong tài khoản owner trỏ về OwnerDashboardScreen */}
       <Stack.Screen
         name="Dashboard"
         component={OwnerDashboardScreen}
@@ -152,12 +125,8 @@ function AppStack() {
   );
 }
 
-// ---------------------------------
-// RootNavigator: chọn stack dựa trên user login hay chưa
-// ---------------------------------
 function RootNavigator() {
   const { user } = useAuth();
-
   return (
     <NavigationContainer>
       {user ? <AppStack /> : <AuthStack />}
@@ -165,9 +134,6 @@ function RootNavigator() {
   );
 }
 
-// ---------------------------------
-// App gốc: wrap bằng AuthProvider
-// ---------------------------------
 export default function App() {
   return (
     <AuthProvider>
@@ -176,12 +142,6 @@ export default function App() {
   );
 }
 
-// ---------------------------------
-// Styles
-// ---------------------------------
 const styles = StyleSheet.create({
-  signOutButton: {
-    marginRight: 15,
-    padding: 5,
-  },
+  signOutButton: { marginRight: 15, padding: 5 },
 });
