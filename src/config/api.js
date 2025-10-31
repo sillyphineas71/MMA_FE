@@ -24,6 +24,59 @@ function resolveBaseURL() {
 
 export const API_BASE = resolveBaseURL();
 
+function toQuery(params) {
+  if (!params || typeof params !== "object") return "";
+  const q = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== "")
+    .map(
+      ([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`
+    )
+    .join("&");
+  return q ? `?${q}` : "";
+}
+
+export async function apiGet(path, params) {
+  const hasQueryInPath = typeof path === "string" && path.includes("?");
+  const qs = toQuery(params);
+  const url = `${API_BASE}${path}${
+    hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
+  }`;
+  const token = await AsyncStorage.getItem("userToken");
+
+  const headers = {
+    Accept: "application/json",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, { method: "GET", headers });
+  } catch (e) {
+    throw new Error(
+      `Network request failed to ${url}. Check LAN/server/firewall.`
+    );
+  }
+
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    const message = data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+
+  // Normalize array payload for admin screens expecting res.data
+  if (Array.isArray(data)) {
+    return { data };
+  }
+  return data;
+}
+
 export async function apiPost(path, body) {
   const url = `${API_BASE}${path}`;
   const token = await AsyncStorage.getItem("userToken"); // Lấy token
@@ -53,6 +106,44 @@ export async function apiPost(path, body) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    const message = data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+export async function apiPatch(path, body) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+
+  const headers = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "PATCH",
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network request failed to ${url}. Check LAN/server/firewall.`
+    );
+  }
+
   const text = await res.text();
   let data;
   try {

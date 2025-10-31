@@ -16,7 +16,7 @@ import { palette } from "./src/theme/theme";
 
 // Auth flow
 import LoginScreen from "./src/screens/LoginScreen";
-import RegisterScreen from "./src/screens/RegisterScreen";
+import RegisterScreen from "./src/screens/RegisterScreen2";
 
 // Admin / Owner dashboards
 import AdminStack from "./src/navigation/AdminStack";
@@ -132,13 +132,13 @@ function AppStack() {
         }}
       />
 
-      {/* Dashboard tổng hợp / home sau login */}
+      {/* Dashboard trong tài khoản owner trỏ về OwnerDashboardScreen */}
       <Stack.Screen
         name="Dashboard"
-        component={HomeDashboardScreen}
+        component={OwnerDashboardScreen}
         options={{
           headerShown: true,
-          title: "Tổng quan",
+          title: "Owner Dashboard",
           headerRight: SignOutButton,
         }}
       />

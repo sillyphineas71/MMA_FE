@@ -9,21 +9,69 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Tải token và user từ storage khi mở app
-    const bootstrapAsync = async () => {
-      let userToken, userData;
+  // Helper: decode JWT payload safely (no external deps)
+  const decodeJwt = (jwt) => {
+    try {
+      const base64Url = jwt.split(".")[1] || "";
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+      let decoded = null;
       try {
-        userToken = await AsyncStorage.getItem("userToken");
-        userData = await AsyncStorage.getItem("user");
-        if (userToken && userData) {
-          setToken(userToken);
-          setUser(JSON.parse(userData));
+        if (typeof Buffer !== "undefined" && Buffer.from) {
+          decoded = Buffer.from(padded, "base64").toString("utf8");
+        }
+      } catch (_) {}
+      if (!decoded) {
+        if (
+          typeof global !== "undefined" &&
+          typeof global.atob === "function"
+        ) {
+          decoded = decodeURIComponent(
+            global
+              .atob(padded)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+        } else if (typeof atob === "function") {
+          decoded = decodeURIComponent(
+            atob(padded)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+        }
+      }
+      return decoded ? JSON.parse(decoded) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    // Tải token và user từ storage khi mở app và kiểm tra hạn token
+    const bootstrapAsync = async () => {
+      try {
+        const userToken = await AsyncStorage.getItem("userToken");
+        const userData = await AsyncStorage.getItem("user");
+        if (userToken) {
+          const payload = decodeJwt(userToken);
+          const now = Date.now();
+          const expMs = payload?.exp ? payload.exp * 1000 : null;
+          if (expMs && expMs < now) {
+            // Token hết hạn → xoá và yêu cầu đăng nhập lại
+            await AsyncStorage.removeItem("userToken");
+            await AsyncStorage.removeItem("user");
+          } else if (userData) {
+            setToken(userToken);
+            setUser(JSON.parse(userData));
+          }
         }
       } catch (e) {
         console.error("Lỗi phục hồi token", e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     bootstrapAsync();
