@@ -18,6 +18,7 @@ import OwnerVenueEditScreen from "./src/screens/OwnerVenueEditScreen";
 import OwnerSubPitchListScreen from "./src/screens/OwnerSubPitchListScreen";
 import OwnerSubPitchCreateScreen from "./src/screens/OwnerSubPitchCreateScreen";
 import OwnerSubPitchEditScreen from "./src/screens/OwnerSubPitchEditScreen";
+import OwnerReviewListScreen from "./src/screens/OwnerReviewListScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -61,7 +62,7 @@ export default function App() {
         <Stack.Screen
           name="OwnerVenueList"
           component={OwnerVenueListScreen}
-          options={{ headerShown: true, title: "Quản lý sân" }}
+          options={{ headerShown: false, title: "Quản lý sân" }}
         />
         <Stack.Screen name="OwnerVenueCreate" component={OwnerVenueCreateScreen} />
         <Stack.Screen name="OwnerVenueEdit" component={OwnerVenueEditScreen} />
@@ -79,6 +80,11 @@ export default function App() {
         <Stack.Screen
           name="OwnerSubPitchEdit"
           component={OwnerSubPitchEditScreen}
+          options={{ headerShown: false }} // Đã có header riêng
+        />
+        <Stack.Screen
+          name="OwnerReviewListScreen"
+          component={OwnerReviewListScreen}
           options={{ headerShown: false }} // Đã có header riêng
         />
       </Stack.Navigator>

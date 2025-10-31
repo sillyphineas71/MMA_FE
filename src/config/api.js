@@ -179,3 +179,75 @@ export async function apiDelete(path) {
 
   return data;
 }
+export async function apiPutForm(path, formData) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("token");
+
+  // 1. KHÔNG set "Content-Type", fetch sẽ tự động làm
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: formData, // 2. KHÔNG stringify, gửi thẳng formData
+    });
+  } catch (e) {
+    throw new Error(`Network PUT Form failed to ${url}. Check your connection.`);
+  }
+
+  const text = await res.text();
+  console.log("📦 Raw response text:", text);
+  console.log("📦 Raw form response text:", text);
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    const message = data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data;
+}
+
+export async function apiPostForm(path, formData) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("token");
+
+  // 1. KHÔNG set "Content-Type", fetch sẽ tự động làm
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "POST", // <-- SỬA THÀNH POST
+      headers,
+      body: formData, // 2. KHÔNG stringify, gửi thẳng formData
+    });
+  } catch (e) {
+    throw new Error(`Network POST Form failed to ${url}. Check your connection.`);
+  }
+
+  const text = await res.text();
+  console.log("📦 Raw form response text:", text);
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = { raw: text };
+  }
+
+  if (!res.ok) {
+    const message = data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+
+  return data;
+}

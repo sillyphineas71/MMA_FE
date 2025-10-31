@@ -66,6 +66,12 @@ export default function OwnerSubPitchListScreen({ navigation, route }) {
     const createSubPitch = () => navigation.navigate("OwnerSubPitchCreate", { venueId });
     const editSubPitch = (subPitch) => navigation.navigate("OwnerSubPitchEdit", { subPitch });
 
+    const viewReviews = (subPitch) => {
+        navigation.navigate("OwnerReviewListScreen", {
+            subPitchId: subPitch._id,
+            subPitchName: subPitch.name,
+        });
+    };
     const renderItem = ({ item }) => (
         <View style={styles.card}>
             <View style={styles.cardContent}>
@@ -81,6 +87,10 @@ export default function OwnerSubPitchListScreen({ navigation, route }) {
                 </Text>
 
                 <View style={styles.actions}>
+                    <TouchableOpacity style={styles.actionBtn} onPress={() => viewReviews(item)}>
+                        <Ionicons name="star-outline" size={18} color="#0EA5E9" />
+                        <Text style={[styles.actionText, { color: "#0EA5E9" }]}>Đánh giá</Text>
+                    </TouchableOpacity>
                     <TouchableOpacity style={styles.actionBtn} onPress={() => editSubPitch(item)}>
                         <Feather name="edit" size={18} color="#40B800" />
                         <Text style={styles.actionText}>Sửa</Text>
@@ -89,6 +99,7 @@ export default function OwnerSubPitchListScreen({ navigation, route }) {
                         <Feather name="trash-2" size={18} color="#EF4444" />
                         <Text style={[styles.actionText, { color: "#EF4444" }]}>Xoá</Text>
                     </TouchableOpacity>
+
                 </View>
             </View>
         </View>
