@@ -2,6 +2,7 @@
   "expo": {
     "name": "mma301_project",
     "slug": "mma301_project",
+    "scheme": "mmaapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -24,7 +25,7 @@
       "usesCleartextTraffic": true
     },
     "extra": {
-      "apiBase": "http://192.168.137.1:9999"
+      "apiBase": "http://192.168.68.2:9999"
     },
     "web": {
       "favicon": "./assets/favicon.png"
