@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { apiGet } from "../../config/api";
@@ -136,10 +137,8 @@ export default function AdminBookingsScreen() {
         />
       </View>
 
-      <FlatList
+      <ScrollView
         horizontal
-        data={STATUS_FILTERS}
-        keyExtractor={(i) => i.label}
         showsHorizontalScrollIndicator={false}
         style={styles.chipList}
         contentContainerStyle={{
@@ -147,14 +146,16 @@ export default function AdminBookingsScreen() {
           marginTop: spacing.xs,
           alignItems: "center",
         }}
-        renderItem={({ item }) => (
+      >
+        {STATUS_FILTERS.map((item) => (
           <Chip
+            key={item.label}
             text={item.label}
             active={status === item.label}
             onPress={() => setStatus(item.label)}
           />
-        )}
-      />
+        ))}
+      </ScrollView>
 
       {loading ? (
         <View style={{ paddingTop: spacing.lg }}>
