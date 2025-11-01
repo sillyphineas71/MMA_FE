@@ -37,41 +37,45 @@ const RejectModal = ({ visible, onClose, onSubmit }) => {
     setReason(""); // Reset
     onClose();
   };
-  
+
   const handleClose = () => {
-     setReason("");
-     onClose();
-  }
+    setReason("");
+    onClose();
+  };
 
   return (
-    <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={handleClose}>
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={handleClose}
+    >
       <View style={styles.modalBackdrop}>
         <View style={styles.reasonModalContainer}>
           <Text style={styles.modalTitle}>Lý do từ chối</Text>
           <TextInput
-            style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+            style={[styles.input, { height: 80, textAlignVertical: "top" }]}
             placeholder="Nhập lý do..."
             multiline
             value={reason}
             onChangeText={setReason}
           />
           <View style={styles.modalButtonRow}>
-             <TouchableOpacity style={styles.modalButton} onPress={handleClose}>
-                <Text style={styles.modalButtonText}>Hủy</Text>
-             </TouchableOpacity>
-             <GradientButton
-                title={loading ? "Đang gửi..." : "Xác nhận"}
-                onPress={handleSubmit}
-                disabled={loading}
-                style={{ flex: 1, marginLeft: spacing.sm }}
-              />
+            <TouchableOpacity style={styles.modalButton} onPress={handleClose}>
+              <Text style={styles.modalButtonText}>Hủy</Text>
+            </TouchableOpacity>
+            <GradientButton
+              title={loading ? "Đang gửi..." : "Xác nhận"}
+              onPress={handleSubmit}
+              disabled={loading}
+              style={{ flex: 1, marginLeft: spacing.sm }}
+            />
           </View>
         </View>
       </View>
     </Modal>
   );
 };
-
 
 // Component Item Yêu cầu
 const RequestItem = ({ item, onProcess }) => {
@@ -80,48 +84,53 @@ const RequestItem = ({ item, onProcess }) => {
 
   // Xử lý chung
   const runAction = async (action, reason) => {
-     try {
+    try {
       setLoading(true);
-      const body = action === 'reject' ? { reason } : {};
+      const body = action === "reject" ? { reason } : {};
       await apiPost(`/api/withdrawals/admin/${action}/${item._id}`, body);
-      
-      Alert.alert("Thành công", `Đã ${action === 'approve' ? 'duyệt' : 'từ chối'} yêu cầu.`);
+
+      Alert.alert(
+        "Thành công",
+        `Đã ${action === "approve" ? "duyệt" : "từ chối"} yêu cầu.`
+      );
       onProcess(); // Gọi callback để tải lại danh sách
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   // Bấm nút Duyệt
   const handleApprove = () => {
-     Alert.alert(
+    Alert.alert(
       `Xác nhận Duyệt`,
-      `Bạn có chắc muốn DUYỆT yêu cầu ${formatCurrency(item.amount)} cho ${item.ownerId?.name}?`,
+      `Bạn có chắc muốn DUYỆT yêu cầu ${formatCurrency(item.amount)} cho ${
+        item.ownerId?.name
+      }?`,
       [
         { text: "Hủy" },
-        { text: "Xác nhận", onPress: () => runAction('approve', null) }
+        { text: "Xác nhận", onPress: () => runAction("approve", null) },
       ]
     );
   };
-  
+
   // Bấm nút Từ chối (mở modal)
   const handleReject = () => {
     setRejectModalVisible(true);
   };
-  
+
   // Gửi lý do từ modal
   const submitReject = async (reason) => {
-    await runAction('reject', reason);
+    await runAction("reject", reason);
     setRejectModalVisible(false); // Đóng modal sau khi submit
   };
 
   const getStatusStyle = (status) => {
-    if (status === 'success') return { color: 'green', text: 'Thành công' };
-    if (status === 'rejected') return { color: 'red', text: 'Bị từ chối' };
-    if (status === 'processing') return { color: 'blue', text: 'Đang xử lý' };
-    return { color: palette.sub, text: 'Đang chờ' };
+    if (status === "success") return { color: "green", text: "Thành công" };
+    if (status === "rejected") return { color: "red", text: "Bị từ chối" };
+    if (status === "processing") return { color: "blue", text: "Đang xử lý" };
+    return { color: palette.sub, text: "Đang chờ" };
   };
   const status = getStatusStyle(item.status);
 
@@ -129,22 +138,30 @@ const RequestItem = ({ item, onProcess }) => {
     <>
       <View style={styles.itemCard}>
         <View style={styles.itemRow}>
-          <Text style={styles.itemOwner}>{item.ownerId?.name || "Không rõ"}</Text>
+          <Text style={styles.itemOwner}>
+            {item.ownerId?.name || "Không rõ"}
+          </Text>
           <Text style={styles.itemAmount}>{formatCurrency(item.amount)}</Text>
         </View>
         <Text style={styles.itemSubText}>Email: {item.ownerId?.email}</Text>
-        <Text style={styles.itemSubText}>Ngân hàng: {item.bankInfo.bankName}</Text>
-        <Text style={styles.itemSubText}>STK: {item.bankInfo.accountNumber}</Text>
-        <Text style={styles.itemSubText}>Chủ TK: {item.bankInfo.accountName}</Text>
+        <Text style={styles.itemSubText}>
+          Ngân hàng: {item.bankInfo.bankName}
+        </Text>
+        <Text style={styles.itemSubText}>
+          STK: {item.bankInfo.accountNumber}
+        </Text>
+        <Text style={styles.itemSubText}>
+          Chủ TK: {item.bankInfo.accountName}
+        </Text>
         <Text style={styles.itemSubText}>
           Ngày yêu cầu: {new Date(item.requestedAt).toLocaleString("vi-VN")}
         </Text>
-        
-        {item.status !== 'pending' && (
-           <Text style={[styles.itemStatus, { color: status.color }]}>
-              {status.text}
-              {item.status === 'rejected' && ` (Lý do: ${item.rejectionReason})`}
-           </Text>
+
+        {item.status !== "pending" && (
+          <Text style={[styles.itemStatus, { color: status.color }]}>
+            {status.text}
+            {item.status === "rejected" && ` (Lý do: ${item.rejectionReason})`}
+          </Text>
         )}
 
         {item.status === "pending" && (
@@ -165,20 +182,22 @@ const RequestItem = ({ item, onProcess }) => {
               {loading ? (
                 <ActivityIndicator color={palette.primaryDark} />
               ) : (
-                 <>
+                <>
                   <Feather name="check" size={16} color={palette.primaryDark} />
-                  <Text style={[styles.actionText, { color: palette.primaryDark }]}>
+                  <Text
+                    style={[styles.actionText, { color: palette.primaryDark }]}
+                  >
                     Duyệt
                   </Text>
-                 </>
+                </>
               )}
             </TouchableOpacity>
           </View>
         )}
       </View>
-      
+
       {/* Modal cho item này */}
-      <RejectModal 
+      <RejectModal
         visible={rejectModalVisible}
         onClose={() => setRejectModalVisible(false)}
         onSubmit={submitReject}
@@ -197,7 +216,12 @@ export default function WithdrawalAdminScreen() {
     try {
       setLoading(true);
       const data = await apiGet("/api/withdrawals/admin/list");
-      setAllData(data);
+      const normalized = Array.isArray(data?.data)
+        ? data.data
+        : Array.isArray(data)
+        ? data
+        : [];
+      setAllData(normalized);
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
@@ -212,16 +236,20 @@ export default function WithdrawalAdminScreen() {
       fetchData();
     }, [])
   );
-  
+
   // Phân loại dữ liệu (dùng useMemo để tối ưu)
   const sections = useMemo(() => {
-      const pending = allData.filter((d) => d.status === "pending" || d.status === "processing");
-      const history = allData.filter((d) => d.status === "success" || d.status === "rejected");
-      
-      return [
-        { title: `Chờ xử lý (${pending.length})`, data: pending },
-        { title: "Lịch sử đã xử lý", data: history },
-      ];
+    const pending = allData.filter(
+      (d) => d.status === "pending" || d.status === "processing"
+    );
+    const history = allData.filter(
+      (d) => d.status === "success" || d.status === "rejected"
+    );
+
+    return [
+      { title: `Chờ xử lý (${pending.length})`, data: pending },
+      { title: "Lịch sử đã xử lý", data: history },
+    ];
   }, [allData]); // Chỉ tính toán lại khi allData thay đổi
 
   const onRefresh = () => {
@@ -242,16 +270,22 @@ export default function WithdrawalAdminScreen() {
       <SectionList
         sections={sections}
         keyExtractor={(item) => item._id}
-        renderItem={({ item }) => <RequestItem item={item} onProcess={fetchData} />}
+        renderItem={({ item }) => (
+          <RequestItem item={item} onProcess={fetchData} />
+        )}
         renderSectionHeader={({ section: { title } }) => (
           <Text style={styles.sectionTitle}>{title}</Text>
         )}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[palette.primary]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[palette.primary]}
+          />
         }
         contentContainerStyle={{ padding: spacing.lg }}
         ListEmptyComponent={
-            <Text style={styles.emptyText}>Không có yêu cầu nào.</Text>
+          <Text style={styles.emptyText}>Không có yêu cầu nào.</Text>
         }
       />
     </SafeAreaView>
@@ -285,7 +319,7 @@ const styles = StyleSheet.create({
   itemAmount: { fontSize: 16, fontWeight: "700", color: palette.primaryDark },
   itemSubText: { color: palette.sub, fontSize: 14, marginBottom: 2 },
   itemStatus: { fontWeight: "700", marginTop: spacing.sm },
-  emptyText: { color: palette.sub, textAlign: 'center', marginTop: spacing.lg },
+  emptyText: { color: palette.sub, textAlign: "center", marginTop: spacing.lg },
   buttonRow: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -313,7 +347,7 @@ const styles = StyleSheet.create({
   approveButton: {
     backgroundColor: "#F0FDF4", // Green light
   },
-  
+
   // Modal Lý do
   modalBackdrop: {
     flex: 1,
@@ -326,12 +360,12 @@ const styles = StyleSheet.create({
     backgroundColor: palette.card,
     borderRadius: radius.xl,
     padding: spacing.lg,
-    width: '100%',
+    width: "100%",
     ...shadow.card,
   },
-  modalTitle: { 
-    fontSize: 18, 
-    fontWeight: "700", 
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
     color: palette.text,
     marginBottom: spacing.md,
   },
@@ -345,20 +379,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   modalButtonRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: spacing.sm,
   },
   modalButton: {
     flex: 1,
     height: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: palette.border,
     borderRadius: radius.pill,
   },
-   modalButtonText: {
+  modalButtonText: {
     color: palette.sub,
     fontSize: 16,
     fontWeight: "700",
-  }
+  },
 });

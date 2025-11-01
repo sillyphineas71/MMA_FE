@@ -32,6 +32,7 @@ export default function AdminVenuesScreen() {
       setVenues(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error("Fetch venues error:", e.message);
+      Alert.alert("Lỗi tải Venues", e.message);
     } finally {
       setLoading(false);
     }
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
     borderColor: palette.border,
     alignSelf: "flex-start",
   },
-  chipList: { maxHeight: 54 },
+  chipList: { marginBottom: spacing.sm },
   chipActive: {
     backgroundColor: palette.primary,
     borderColor: palette.primaryDark,

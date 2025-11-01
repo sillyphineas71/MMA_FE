@@ -38,6 +38,7 @@ export default function AdminBookingsScreen() {
       setBookings(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error("Fetch bookings error:", e.message);
+      Alert.alert("Lỗi tải Bookings", e.message);
     } finally {
       setLoading(false);
     }
@@ -230,7 +231,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: 6,
   },
-  chipList: { maxHeight: 54 },
+  chipList: { marginBottom: spacing.sm },
   chip: {
     backgroundColor: "#F0F7F3",
     borderRadius: 18,

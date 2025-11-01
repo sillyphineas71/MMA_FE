@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // THÊM
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Resolve backend base URL across emulator, simulator and physical devices.
 function resolveBaseURL() {
@@ -18,8 +18,8 @@ function resolveBaseURL() {
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
-  // 4) Fallback: ask user to set env if detection fails
-  return "http://192.168.1.8:9999"; // CHANGE_ME to your PC LAN IP if needed
+  // Fallback to your LAN IP if detection fails (keep your current IP)
+  return "http://10.33.67.168:9999";
 }
 
 export const API_BASE = resolveBaseURL();
@@ -43,9 +43,7 @@ export async function apiGet(path, params) {
   }`;
   const token = await AsyncStorage.getItem("userToken");
 
-  const headers = {
-    Accept: "application/json",
-  };
+  const headers = { Accept: "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res;
@@ -64,43 +62,28 @@ export async function apiGet(path, params) {
   } catch (_) {
     data = { raw: text };
   }
-
   if (!res.ok) {
     const message = data?.message || `HTTP ${res.status}`;
     throw new Error(message);
   }
-
-  // Normalize array payload for admin screens expecting res.data
-  if (Array.isArray(data)) {
-    return { data };
-  }
+  // Normalize array payloads so admin screens can read res.data consistently
+  if (Array.isArray(data)) return { data };
   return data;
 }
 
 export async function apiPost(path, body) {
   const url = `${API_BASE}${path}`;
-  const token = await AsyncStorage.getItem("userToken"); // Lấy token
-
-  const headers = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`; // Gắn token
-  }
-
-  const options = {
-    method: "POST",
-    headers,
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res;
   try {
-    res = await fetch(url, options);
+    res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
   } catch (e) {
     throw new Error(
       `Network request failed to ${url}. Check LAN/server/firewall.`
@@ -113,22 +96,14 @@ export async function apiPost(path, body) {
   } catch (_) {
     data = { raw: text };
   }
-
-  if (!res.ok) {
-    const message = data?.message || `HTTP ${res.status}`;
-    throw new Error(message);
-  }
-
+  if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
   return data;
 }
 
 export async function apiPatch(path, body) {
   const url = `${API_BASE}${path}`;
   const token = await AsyncStorage.getItem("userToken");
-
-  const headers = {
-    "Content-Type": "application/json",
-  };
+  const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res;
@@ -143,7 +118,6 @@ export async function apiPatch(path, body) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-
   const text = await res.text();
   let data;
   try {
@@ -151,11 +125,6 @@ export async function apiPatch(path, body) {
   } catch (_) {
     data = { raw: text };
   }
-
-  if (!res.ok) {
-    const message = data?.message || `HTTP ${res.status}`;
-    throw new Error(message);
-  }
-
+  if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
   return data;
 }

@@ -38,6 +38,8 @@ export default function AdminUsersScreen() {
       setUsers(Array.isArray(res.data) ? res.data : []);
     } catch (e) {
       console.error("Fetch users error:", e.message);
+      // Hiển thị lỗi rõ ràng (401/403/Network) thay vì lặng im
+      Alert.alert("Lỗi tải Users", e.message);
     } finally {
       setLoading(false);
     }
@@ -46,6 +48,17 @@ export default function AdminUsersScreen() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  // Toggle ban/activate user
+  const handleToggleStatus = async (id, currentStatus) => {
+    const next = currentStatus === "banned" ? "active" : "banned";
+    try {
+      await apiPatch(`/api/admin/users/${id}/status`, { status: next });
+      await fetchUsers();
+    } catch (e) {
+      Alert.alert("Lỗi cập nhật trạng thái", e.message);
+    }
+  };
 
   const onRefresh = async () => {
     try {
