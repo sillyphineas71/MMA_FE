@@ -18,7 +18,7 @@ function resolveBaseURL() {
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
-  // Fallback to your LAN IP if detection fails (keep your current IP)
+  // Fallback to your LAN IP if detection fails (keep dev branch IP)
   return "http://10.33.67.168:9999";
 }
 
@@ -33,6 +33,21 @@ function toQuery(params) {
     )
     .join("&");
   return q ? `?${q}` : "";
+}
+
+async function parseResponse(res) {
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = { raw: text };
+  }
+  if (!res.ok) {
+    const message = data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+  return data;
 }
 
 export async function apiGet(path, params) {
@@ -54,19 +69,7 @@ export async function apiGet(path, params) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-
-  const text = await res.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { raw: text };
-  }
-  if (!res.ok) {
-    const message = data?.message || `HTTP ${res.status}`;
-    throw new Error(message);
-  }
-  // Normalize array payloads so admin screens can read res.data consistently
+  const data = await parseResponse(res);
   if (Array.isArray(data)) return { data };
   return data;
 }
@@ -89,15 +92,7 @@ export async function apiPost(path, body) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-  const text = await res.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { raw: text };
-  }
-  if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
-  return data;
+  return await parseResponse(res);
 }
 
 export async function apiPatch(path, body) {
@@ -118,13 +113,92 @@ export async function apiPatch(path, body) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-  const text = await res.text();
-  let data;
+  return await parseResponse(res);
+}
+
+export async function apiPut(path, body) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { raw: text };
+    res = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    throw new Error(
+      `Network PUT failed to ${url}. Check your connection or backend.`
+    );
   }
-  if (!res.ok) throw new Error(data?.message || `HTTP ${res.status}`);
-  return data;
+
+  return await parseResponse(res);
+}
+
+export async function apiDelete(path) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "DELETE",
+      headers,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network DELETE failed to ${url}. Check your connection or backend.`
+    );
+  }
+
+  return await parseResponse(res);
+}
+
+export async function apiPutForm(path, formData) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: formData,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network PUT Form failed to ${url}. Check your connection.`
+    );
+  }
+
+  return await parseResponse(res);
+}
+
+export async function apiPostForm(path, formData) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network POST Form failed to ${url}. Check your connection.`
+    );
+  }
+
+  return await parseResponse(res);
 }

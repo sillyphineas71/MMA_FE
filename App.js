@@ -28,6 +28,13 @@ import VenueDetailScreen from "./src/screens/VenueDetailScreen";
 import SlotSelectionScreen from "./src/screens/SlotSelectionScreen";
 import OwnerCalendarScreen from "./src/screens/OwnerCalendarScreen";
 import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
+import OwnerVenueListScreen from "./src/screens/OwnerVenueListScreen";
+import OwnerVenueCreateScreen from "./src/screens/OwnerVenueCreateScreen";
+import OwnerVenueEditScreen from "./src/screens/OwnerVenueEditScreen";
+import OwnerSubPitchListScreen from "./src/screens/OwnerSubPitchListScreen";
+import OwnerSubPitchCreateScreen from "./src/screens/OwnerSubPitchCreateScreen";
+import OwnerSubPitchEditScreen from "./src/screens/OwnerSubPitchEditScreen";
+import OwnerReviewListScreen from "./src/screens/OwnerReviewListScreen";
 
 const Stack = createNativeStackNavigator();
 
