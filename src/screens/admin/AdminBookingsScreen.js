@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { apiGet } from "../../config/api";
@@ -36,7 +37,17 @@ export default function AdminBookingsScreen() {
       const res = await apiGet("/api/admin/bookings", {
         status: STATUS_FILTERS.find((f) => f.label === status)?.value || "",
       });
-      setBookings(Array.isArray(res.data) ? res.data : []);
+      // Normalize response: accept array or wrapped shapes
+      const list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.bookings)
+        ? res.bookings
+        : Array.isArray(res?.results)
+        ? res.results
+        : [];
+      setBookings(list);
     } catch (e) {
       console.error("Fetch bookings error:", e.message);
       Alert.alert("Lỗi tải Bookings", e.message);

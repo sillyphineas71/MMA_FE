@@ -30,7 +30,17 @@ export default function AdminVenuesScreen() {
         status: status === "All" ? "" : status.toLowerCase(),
         search,
       });
-      setVenues(Array.isArray(res.data) ? res.data : []);
+      // Normalize response: accept array or wrapped shapes
+      const list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.venues)
+        ? res.venues
+        : Array.isArray(res?.results)
+        ? res.results
+        : [];
+      setVenues(list);
     } catch (e) {
       console.error("Fetch venues error:", e.message);
       Alert.alert("Lỗi tải Venues", e.message);

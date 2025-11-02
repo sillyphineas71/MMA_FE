@@ -35,7 +35,17 @@ export default function AdminUsersScreen() {
         search,
       };
       const res = await apiGet("/api/admin/users", params);
-      setUsers(Array.isArray(res.data) ? res.data : []);
+      // Normalize response: accept array or wrapped shapes
+      const list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.users)
+        ? res.users
+        : Array.isArray(res?.results)
+        ? res.results
+        : [];
+      setUsers(list);
     } catch (e) {
       console.error("Fetch users error:", e.message);
       // Hiển thị lỗi rõ ràng (401/403/Network) thay vì lặng im
