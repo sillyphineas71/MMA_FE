@@ -3,6 +3,7 @@ import { TouchableOpacity, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Auth context
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
@@ -116,9 +117,11 @@ function RootNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <RootNavigator />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <RootNavigator />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
 

@@ -19,7 +19,7 @@ function resolveBaseURL() {
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
   // Fallback to your LAN IP if detection fails (keep dev branch IP)
-  return "http://10.33.67.168:9999";
+  return "http://192.168.1.13:9999";
 }
 
 export const API_BASE = resolveBaseURL();
@@ -70,7 +70,6 @@ export async function apiGet(path, params) {
     );
   }
   const data = await parseResponse(res);
-  if (Array.isArray(data)) return { data };
   return data;
 }
 

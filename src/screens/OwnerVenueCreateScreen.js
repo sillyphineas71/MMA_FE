@@ -49,7 +49,8 @@ export default function OwnerVenueCreateScreen({ navigation }) {
   // Chọn ảnh
   const pickImages = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== "granted") {
         Alert.alert("Cần quyền truy cập ảnh để chọn ảnh!");
         return;
@@ -90,12 +91,16 @@ export default function OwnerVenueCreateScreen({ navigation }) {
     }
   };
 
-  const removeImage = (uri) => setImages((prev) => prev.filter((i) => i !== uri));
+  const removeImage = (uri) =>
+    setImages((prev) => prev.filter((i) => i !== uri));
 
   // Dịch ngược tọa độ
   const reverseGeocodeAndUpdateUI = async (latitude, longitude) => {
     try {
-      const results = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const results = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude,
+      });
       if (results.length > 0) {
         const addr = results[0];
         const formattedAddress = [
@@ -105,7 +110,9 @@ export default function OwnerVenueCreateScreen({ navigation }) {
           addr.region,
           addr.city,
           addr.country,
-        ].filter(Boolean).join(", ");
+        ]
+          .filter(Boolean)
+          .join(", ");
         setAddress(formattedAddress);
         setArea(addr.city || addr.region || "");
       }
@@ -153,7 +160,10 @@ export default function OwnerVenueCreateScreen({ navigation }) {
   // ======== HANDLE CREATE (FormData) ========
   const handleCreate = async () => {
     if (!name?.trim() || !area?.trim() || !location) {
-      return Alert.alert("Lỗi", "Vui lòng nhập Tên sân, Khu vực và chọn Vị trí!");
+      return Alert.alert(
+        "Lỗi",
+        "Vui lòng nhập Tên sân, Khu vực và chọn Vị trí!"
+      );
     }
     setLoading(true);
 
@@ -169,7 +179,7 @@ export default function OwnerVenueCreateScreen({ navigation }) {
           location,
           images: [],
         };
-        const resp = await apiPost("/owner/venues", payload);
+        const resp = await apiPost("/api/owner/venues", payload);
         if (resp?._id) {
           Alert.alert("✅ Thành công", "Tạo sân thành công!");
           navigation.goBack();
@@ -182,24 +192,24 @@ export default function OwnerVenueCreateScreen({ navigation }) {
       // Nếu có ảnh: build FormData
       const formData = new FormData();
 
-      formData.append('name', name);
-      formData.append('address', address);
-      formData.append('area', area);
-      formData.append('contact[phone]', phone);
+      formData.append("name", name);
+      formData.append("address", address);
+      formData.append("area", area);
+      formData.append("contact[phone]", phone);
 
       // toạ độ, giờ, location...
-      formData.append('hours[open]', open);
-      formData.append('hours[close]', close);
-      formData.append('location[type]', 'Point');
-      formData.append('location[coordinates][]', region.longitude);
-      formData.append('location[coordinates][]', region.latitude);
+      formData.append("hours[open]", open);
+      formData.append("hours[close]", close);
+      formData.append("location[type]", "Point");
+      formData.append("location[coordinates][]", region.longitude);
+      formData.append("location[coordinates][]", region.latitude);
 
       // 4) images: append file objects (RN expects { uri, name, type })
       images.forEach((image, index) => {
-        formData.append('images', {
+        formData.append("images", {
           uri: image, // đường dẫn từ ImagePicker
           name: `photo_${index}.jpg`,
-          type: 'image/jpeg', // hoặc image/png nếu cần
+          type: "image/jpeg", // hoặc image/png nếu cần
         });
       });
 
@@ -210,11 +220,13 @@ export default function OwnerVenueCreateScreen({ navigation }) {
           console.log("->", pair[0], pair[1]);
         }
       } catch (e) {
-        console.log("Không thể iterate FormData entries (runtime may not allow).");
+        console.log(
+          "Không thể iterate FormData entries (runtime may not allow)."
+        );
       }
 
       // Gửi
-      const response = await apiPostForm("/owner/venues", formData);
+      const response = await apiPostForm("/api/owner/venues", formData);
 
       // Kiểm tra kết quả
       if (response && response._id) {
@@ -225,7 +237,10 @@ export default function OwnerVenueCreateScreen({ navigation }) {
       }
     } catch (err) {
       console.error("❌ LỖI TẠO SÂN:", err);
-      Alert.alert("Lỗi", err.message || "Lỗi kết nối hoặc dữ liệu không hợp lệ!");
+      Alert.alert(
+        "Lỗi",
+        err.message || "Lỗi kết nối hoặc dữ liệu không hợp lệ!"
+      );
     } finally {
       setLoading(false);
     }
@@ -234,24 +249,61 @@ export default function OwnerVenueCreateScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.headerBar}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
           <Feather name="chevron-left" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Thêm sân mới</Text>
         <View style={{ width: 28 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
-        <TextInput style={styles.input} placeholder="Tên sân *" value={name} onChangeText={setName} placeholderTextColor="#9CA3AF" />
-        <TextInput style={styles.input} placeholder="Địa chỉ" value={address} onChangeText={setAddress} placeholderTextColor="#9CA3AF" />
-        <TextInput style={styles.input} placeholder="Khu vực *" value={area} onChangeText={setArea} placeholderTextColor="#9CA3AF" />
-        <TextInput style={styles.input} placeholder="Số điện thoại" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholderTextColor="#9CA3AF" />
+      <ScrollView
+        contentContainerStyle={styles.formContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <TextInput
+          style={styles.input}
+          placeholder="Tên sân *"
+          value={name}
+          onChangeText={setName}
+          placeholderTextColor="#9CA3AF"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Địa chỉ"
+          value={address}
+          onChangeText={setAddress}
+          placeholderTextColor="#9CA3AF"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Khu vực *"
+          value={area}
+          onChangeText={setArea}
+          placeholderTextColor="#9CA3AF"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Số điện thoại"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          placeholderTextColor="#9CA3AF"
+        />
 
         <View style={styles.row}>
-          <TouchableOpacity style={styles.timeButton} onPress={() => setShowPicker("open")}>
+          <TouchableOpacity
+            style={styles.timeButton}
+            onPress={() => setShowPicker("open")}
+          >
             <Text style={styles.timeButtonText}>🕓 Mở: {open}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.timeButton} onPress={() => setShowPicker("close")}>
+          <TouchableOpacity
+            style={styles.timeButton}
+            onPress={() => setShowPicker("close")}
+          >
             <Text style={styles.timeButtonText}>🕘 Đóng: {close}</Text>
           </TouchableOpacity>
         </View>
@@ -270,11 +322,18 @@ export default function OwnerVenueCreateScreen({ navigation }) {
           <Text style={styles.buttonOutlineText}>📷 Chọn ảnh</Text>
         </TouchableOpacity>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.imageContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.imageContainer}
+        >
           {images.map((uri, i) => (
             <View key={uri + i} style={styles.imageWrapper}>
               <Image source={{ uri }} style={styles.previewImage} />
-              <TouchableOpacity style={styles.removeBtn} onPress={() => removeImage(uri)}>
+              <TouchableOpacity
+                style={styles.removeBtn}
+                onPress={() => removeImage(uri)}
+              >
                 <Text style={styles.removeText}>✕</Text>
               </TouchableOpacity>
             </View>
@@ -284,17 +343,36 @@ export default function OwnerVenueCreateScreen({ navigation }) {
         <Text style={styles.label}>📍 Chọn vị trí trên bản đồ</Text>
         <View style={styles.mapContainer}>
           <MapView style={styles.map} region={region} onPress={handleMapPress}>
-            {location && <Marker coordinate={{ latitude: location.coordinates[1], longitude: location.coordinates[0] }} />}
+            {location && (
+              <Marker
+                coordinate={{
+                  latitude: location.coordinates[1],
+                  longitude: location.coordinates[0],
+                }}
+              />
+            )}
           </MapView>
-          <TouchableOpacity style={styles.locationBtn} onPress={handleGetLocation}>
+          <TouchableOpacity
+            style={styles.locationBtn}
+            onPress={handleGetLocation}
+          >
             <Text style={{ color: "#fff", fontWeight: "700" }}>Lấy vị trí</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={[styles.button, loading && styles.buttonDisabled]} onPress={handleCreate} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Đang tạo..." : "Tạo sân"}</Text>
+        <TouchableOpacity
+          style={[styles.button, loading && styles.buttonDisabled]}
+          onPress={handleCreate}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Đang tạo..." : "Tạo sân"}
+          </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.goBack()} disabled={loading}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          disabled={loading}
+        >
           <Text style={styles.cancelText}>Hủy</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -302,7 +380,9 @@ export default function OwnerVenueCreateScreen({ navigation }) {
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#40B800" />
-          <Text style={{ color: "#40B800", marginTop: 10 }}>Đang tạo sân...</Text>
+          <Text style={{ color: "#40B800", marginTop: 10 }}>
+            Đang tạo sân...
+          </Text>
         </View>
       )}
     </SafeAreaView>
@@ -311,28 +391,124 @@ export default function OwnerVenueCreateScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
-  headerBar: { backgroundColor: "#40B800", flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 14, paddingHorizontal: 16, borderBottomLeftRadius: 20, borderBottomRightRadius: 20, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+  headerBar: {
+    backgroundColor: "#40B800",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
   headerTitle: { fontSize: 22, fontWeight: "700", color: "#fff" },
   backButton: { paddingRight: 10 },
   formContainer: { padding: 16, paddingBottom: 32 },
-  label: { fontSize: 16, fontWeight: "600", color: "#111827", marginVertical: 8, marginTop: 16 },
-  input: { borderWidth: 1, borderColor: "#E5E7EB", borderRadius: 12, padding: 14, backgroundColor: "#fff", marginBottom: 12, fontSize: 16, color: "#111827" },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#111827",
+    marginVertical: 8,
+    marginTop: 16,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 12,
+    padding: 14,
+    backgroundColor: "#fff",
+    marginBottom: 12,
+    fontSize: 16,
+    color: "#111827",
+  },
   row: { flexDirection: "row", gap: 12, marginBottom: 12 },
-  timeButton: { flex: 1, backgroundColor: "#fff", borderWidth: 1, borderColor: "#E5E7EB", padding: 14, borderRadius: 12, alignItems: "center" },
+  timeButton: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
   timeButtonText: { color: "#111827", fontWeight: "500", fontSize: 16 },
-  button: { backgroundColor: "#40B800", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 16 },
+  button: {
+    backgroundColor: "#40B800",
+    padding: 16,
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 16,
+  },
   buttonText: { color: "#fff", fontWeight: "700", fontSize: 16 },
-  buttonOutline: { borderWidth: 1.5, borderColor: "#40B800", padding: 14, borderRadius: 12, alignItems: "center", marginVertical: 12 },
+  buttonOutline: {
+    borderWidth: 1.5,
+    borderColor: "#40B800",
+    padding: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    marginVertical: 12,
+  },
   buttonOutlineText: { color: "#40B800", fontWeight: "600", fontSize: 16 },
   cancelText: { textAlign: "center", color: "#6B7280", marginTop: 16 },
   imageContainer: { paddingVertical: 4, gap: 10 },
-  previewImage: { width: 100, height: 100, borderRadius: 12, backgroundColor: "#F3F4F6" },
+  previewImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+  },
   imageWrapper: { position: "relative" },
-  removeBtn: { position: "absolute", top: 6, right: 6, backgroundColor: "rgba(0,0,0,0.6)", borderRadius: 12, width: 24, height: 24, alignItems: "center", justifyContent: "center", zIndex: 10 },
+  removeBtn: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
+  },
   removeText: { color: "#fff", fontWeight: "700", fontSize: 12 },
-  mapContainer: { height: 240, marginVertical: 12, borderRadius: 12, overflow: "hidden", borderWidth: 1, borderColor: "#E5E7EB" },
+  mapContainer: {
+    height: 240,
+    marginVertical: 12,
+    borderRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
   map: { flex: 1 },
-  locationBtn: { position: "absolute", bottom: 12, right: 12, backgroundColor: "#40B800", paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 3, elevation: 5 },
-  loadingOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255, 255, 255, 0.8)', alignItems: 'center', justifyContent: 'center', zIndex: 20, elevation: 20 },
+  locationBtn: {
+    position: "absolute",
+    bottom: 12,
+    right: 12,
+    backgroundColor: "#40B800",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 20,
+    elevation: 20,
+  },
   buttonDisabled: { backgroundColor: "#A5D6A7" },
 });
