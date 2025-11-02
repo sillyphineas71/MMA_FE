@@ -17,7 +17,6 @@ import { apiGet, apiPatch } from "../config/api";
 import { Feather, AntDesign, Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 
-// --- THAY ĐỔI 1: Đảm bảo { navigation } có trong props ---
 export default function OwnerVenueListScreen({ navigation }) {
   const [venues, setVenues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +24,7 @@ export default function OwnerVenueListScreen({ navigation }) {
   const [searchText, setSearchText] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // --- LOGIC BASE_URL ĐỘNG (Đã sửa) ---
+  // --- Xác định host động ---
   let host;
   if (Constants.manifest2?.extra?.expoGo?.debuggerHost) {
     host = Constants.manifest2.extra.expoGo.debuggerHost.split(":")[0];
@@ -44,19 +43,16 @@ export default function OwnerVenueListScreen({ navigation }) {
     }
   }
   if (!host) {
-    console.warn(
-      "Không thể tự động nhận diện IP. Đang dùng 'localhost' làm dự phòng."
-    );
+    console.warn("Không thể tự động nhận diện IP. Dùng localhost dự phòng.");
     host = "localhost";
   }
   const BASE_URL = `http://${host}:9999`;
 
-  // --- CÁC HÀM XỬ LÝ (Đã sửa lỗi "nhẩy") ---
   const fetchVenues = async () => {
     try {
       const data = await apiGet("/api/owner/venues");
       setVenues(data || []);
-    } catch (err) {
+    } catch {
       Alert.alert("Lỗi", "Không tải được danh sách sân.");
     } finally {
       setLoading(false);
@@ -65,7 +61,6 @@ export default function OwnerVenueListScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      // setLoading(true); // Đã xóa để sửa lỗi "nhẩy"
       fetchVenues();
     }, [])
   );
@@ -76,7 +71,6 @@ export default function OwnerVenueListScreen({ navigation }) {
     setRefreshing(false);
   };
 
-  // (Các hàm toggleStatus, createVenue, editVenue, manageSubPitches giữ nguyên)
   const toggleStatus = async (venue) => {
     const newStatus = venue.status === "active" ? "hidden" : "active";
     try {
@@ -92,6 +86,7 @@ export default function OwnerVenueListScreen({ navigation }) {
       Alert.alert("Lỗi", "Không thể thay đổi trạng thái sân.");
     }
   };
+
   const createVenue = () => navigation.navigate("OwnerVenueCreate");
   const editVenue = (venue) => navigation.navigate("OwnerVenueEdit", { venue });
   const manageSubPitches = (venue) => {
@@ -101,20 +96,18 @@ export default function OwnerVenueListScreen({ navigation }) {
     });
   };
 
-  // --- LOGIC FILTER (Code của bạn đã đúng) ---
   const filteredVenues = useMemo(() => {
     return venues
-      .filter((venue) => {
-        if (activeFilter === "all") return true;
-        return venue.status === activeFilter;
-      })
-      .filter((venue) => {
-        if (searchText === "") return true;
-        return venue.name.toLowerCase().includes(searchText.toLowerCase());
-      });
+      .filter((venue) =>
+        activeFilter === "all" ? true : venue.status === activeFilter
+      )
+      .filter((venue) =>
+        searchText
+          ? venue.name.toLowerCase().includes(searchText.toLowerCase())
+          : true
+      );
   }, [venues, activeFilter, searchText]);
 
-  // --- LOGIC RENDER ITEM (Đã sửa, an toàn) ---
   const renderItem = ({ item }) => {
     let imageUrl = "https://via.placeholder.com/400x200?text=No+Image";
     const imagePath = item.images?.[0];
@@ -147,6 +140,7 @@ export default function OwnerVenueListScreen({ navigation }) {
               ? `${item.ratingAvg} (${item.ratingCount})`
               : "Chưa có đánh giá"}
           </Text>
+
           <View style={styles.actions}>
             <TouchableOpacity
               style={styles.actionBtn}
@@ -157,6 +151,7 @@ export default function OwnerVenueListScreen({ navigation }) {
                 Sân con
               </Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => editVenue(item)}
@@ -164,6 +159,7 @@ export default function OwnerVenueListScreen({ navigation }) {
               <Feather name="edit" size={18} color="#40B800" />
               <Text style={styles.actionText}>Sửa</Text>
             </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => toggleStatus(item)}
@@ -183,7 +179,6 @@ export default function OwnerVenueListScreen({ navigation }) {
     );
   };
 
-  // --- LOADING SCREEN ---
   if (loading)
     return (
       <View style={styles.center}>
@@ -194,10 +189,8 @@ export default function OwnerVenueListScreen({ navigation }) {
       </View>
     );
 
-  // --- MAIN RETURN (JSX) ---
   return (
     <SafeAreaView style={styles.container}>
-      {/* --- THAY ĐỔI 2: THÊM HEADER BAR VÀ NÚT GO BACK --- */}
       <View style={styles.headerBar}>
         <TouchableOpacity
           style={styles.backButton}
@@ -206,7 +199,7 @@ export default function OwnerVenueListScreen({ navigation }) {
           <Feather name="chevron-left" size={28} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Quản lý sân</Text>
-        <View style={{ width: 28 }} /> {/* Căn giữa tiêu đề */}
+        <View style={{ width: 28 }} />
       </View>
 
       <View style={styles.filterContainer}>
@@ -220,58 +213,30 @@ export default function OwnerVenueListScreen({ navigation }) {
           />
         </View>
 
-        {/* --- THAY ĐỔI 3: THAY THẾ COMMENT BẰNG CÁC NÚT FILTER --- */}
         <View style={styles.filterButtonsContainer}>
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              activeFilter === "all" && styles.activeFilterButton,
-            ]}
-            onPress={() => setActiveFilter("all")}
-          >
-            <Text
+          {["all", "active", "hidden"].map((status) => (
+            <TouchableOpacity
+              key={status}
               style={[
-                styles.filterButtonText,
-                activeFilter === "all" && styles.activeFilterButtonText,
+                styles.filterButton,
+                activeFilter === status && styles.activeFilterButton,
               ]}
+              onPress={() => setActiveFilter(status)}
             >
-              Tất cả
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              activeFilter === "active" && styles.activeFilterButton,
-            ]}
-            onPress={() => setActiveFilter("active")}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                activeFilter === "active" && styles.activeFilterButtonText,
-              ]}
-            >
-              Đang hoạt động
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.filterButton,
-              activeFilter === "hidden" && styles.activeFilterButton,
-            ]}
-            onPress={() => setActiveFilter("hidden")}
-          >
-            <Text
-              style={[
-                styles.filterButtonText,
-                activeFilter === "hidden" && styles.activeFilterButtonText,
-              ]}
-            >
-              Đang ẩn
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  activeFilter === status && styles.activeFilterButtonText,
+                ]}
+              >
+                {status === "all"
+                  ? "Tất cả"
+                  : status === "active"
+                  ? "Đang hoạt động"
+                  : "Đang ẩn"}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
@@ -287,7 +252,7 @@ export default function OwnerVenueListScreen({ navigation }) {
             <Text style={styles.emptyText}>Không tìm thấy sân nào</Text>
           }
           contentContainerStyle={{ paddingBottom: 100 }}
-          style={{ paddingHorizontal: 16 }} // Chuyển padding vào đây
+          style={{ paddingHorizontal: 16 }}
         />
       </View>
 
@@ -297,10 +262,9 @@ export default function OwnerVenueListScreen({ navigation }) {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#FFF" },
-
-  // --- THAY ĐỔI 4: THÊM STYLE CHO HEADER BAR ---
   headerBar: {
     backgroundColor: "#40B800",
     flexDirection: "row",
@@ -316,16 +280,8 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: "#fff",
-  },
-  backButton: {
-    paddingRight: 10, // Thêm padding để dễ bấm
-  },
-  // --- HẾT STYLE HEADER ---
-
+  headerTitle: { fontSize: 22, fontWeight: "700", color: "#fff" },
+  backButton: { paddingRight: 10 },
   filterContainer: {
     padding: 16,
     backgroundColor: "#F9FAFB",
@@ -341,32 +297,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
   },
-  searchInput: {
-    fontSize: 16,
-    color: "#111827",
-  },
-  filterButtonsContainer: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 16,
-  },
+  searchInput: { fontSize: 16, color: "#111827" },
+  filterButtonsContainer: { flexDirection: "row", gap: 10, marginTop: 16 },
   filterButton: {
     backgroundColor: "#F3F4F6",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
   },
-  activeFilterButton: {
-    backgroundColor: "#40B800",
-  },
-  filterButtonText: {
-    color: "#374151",
-    fontWeight: "500",
-    fontSize: 14,
-  },
-  activeFilterButtonText: {
-    color: "#FFF",
-  },
+  activeFilterButton: { backgroundColor: "#40B800" },
+  filterButtonText: { color: "#374151", fontWeight: "500", fontSize: 14 },
+  activeFilterButtonText: { color: "#FFF" },
   card: {
     backgroundColor: "#fff",
     borderRadius: 14,
@@ -375,12 +316,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 },
     elevation: 2,
-    marginBottom: 14, // (Đã sửa lỗi chính tả 'smarginBottom')
+    marginBottom: 14,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#F3F4F6",
   },
-  image: { width: "100%", height: 160, backgroundColor: "#F3F4F6" }, // Thêm màu nền
+  image: { width: "100%", height: 160, backgroundColor: "#F3F4F6" },
   cardContent: { padding: 12 },
   name: { fontSize: 18, fontWeight: "700", color: "#40B800" },
   address: { color: "#6B7280", marginVertical: 4 },
@@ -397,12 +338,7 @@ const styles = StyleSheet.create({
   },
   actionBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
   actionText: { fontWeight: "600", color: "#40B800" },
-  center: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FFF",
-  },
+  center: { flex: 1, alignItems: "center", justifyContent: "center" },
   emptyText: {
     textAlign: "center",
     color: "#6B7280",
@@ -424,8 +360,5 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 6,
   },
-  listWrapper: {
-    flex: 1,
-    backgroundColor: "#FFF", // Màu trắng cho khu vực list
-  },
+  listWrapper: { flex: 1, backgroundColor: "#FFF" },
 });
