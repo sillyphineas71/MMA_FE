@@ -24,6 +24,9 @@ export default function VenueDetailScreen({ route, navigation }) {
   const [reviews, setReviews] = useState([]);
   const [activeImage, setActiveImage] = useState(0);
 
+  // ✅ THÊM STATE MỚI: kiểm tra user đã đặt sân này chưa
+  const [hasBooked, setHasBooked] = useState(false);
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -55,6 +58,24 @@ export default function VenueDetailScreen({ route, navigation }) {
         } else {
           setSubPitches([]);
           setReviews([]);
+        }
+
+        // ✅ 4) KIỂM TRA USER ĐÃ TỪNG ĐẶT SÂN NÀY CHƯA
+        try {
+          const resCheck = await fetch(`${API_BASE}/api/bookings/user/completed?venueId=${id}`);
+          if (resCheck.ok) {
+            const data = await resCheck.json();
+            if (Array.isArray(data) && data.length > 0) {
+              setHasBooked(true);
+            } else {
+              setHasBooked(false);
+            }
+          } else {
+            setHasBooked(false);
+          }
+        } catch (err) {
+          console.warn("Không thể kiểm tra booking:", err);
+          setHasBooked(false);
         }
       } catch (err) {
         console.error("Error loading venue detail:", err);
@@ -88,7 +109,7 @@ export default function VenueDetailScreen({ route, navigation }) {
           onScroll={(e) => {
             const index = Math.round(
               e.nativeEvent.contentOffset.x /
-                e.nativeEvent.layoutMeasurement.width
+              e.nativeEvent.layoutMeasurement.width
             );
             setActiveImage(index);
           }}
@@ -164,8 +185,8 @@ export default function VenueDetailScreen({ route, navigation }) {
                   Array.isArray(firstSub.images) && firstSub.images.length > 0
                     ? firstSub.images
                     : Array.isArray(venue.images)
-                    ? venue.images
-                    : [],
+                      ? venue.images
+                      : [],
               });
             } else {
               Alert.alert("Thông báo", "Chưa có sân con để đặt!");
@@ -215,6 +236,43 @@ export default function VenueDetailScreen({ route, navigation }) {
           ))
         )}
 
+        {/* ✅ CHỈ HIỂN THỊ NÚT GỬI ĐÁNH GIÁ NẾU USER ĐÃ ĐẶT */}
+        {hasBooked && (
+          <TouchableOpacity
+            style={styles.feedbackBtn}
+            onPress={() =>
+              navigation.navigate("Feedback", {
+                venueId: venue._id,
+                onReviewSubmitted: () => {
+                  try {
+                    (async () => {
+                      const resSubs = await fetch(`${API_BASE}/api/venues/${id}/sub-pitches`);
+                      if (resSubs.ok) {
+                        const subsData = await resSubs.json();
+                        if (Array.isArray(subsData) && subsData.length > 0) {
+                          const firstSub = subsData[0];
+                          const resReviews = await fetch(
+                            `${API_BASE}/api/sub-pitches/${firstSub._id}/reviews`
+                          );
+                          if (resReviews.ok) {
+                            const reviewData = await resReviews.json();
+                            setReviews(Array.isArray(reviewData) ? reviewData : []);
+                          }
+                        }
+                      }
+                    })();
+                  } catch (error) {
+                    console.error("Refresh review error:", error);
+                  }
+                },
+              })
+            }
+          >
+            <Ionicons name="chatbox-ellipses-outline" size={20} color="#fff" />
+            <Text style={styles.feedbackText}>Gửi đánh giá</Text>
+          </TouchableOpacity>
+        )}
+
         {/* Reviews */}
         <Text style={styles.sectionTitle}>Đánh giá</Text>
         {reviews.length === 0 ? (
@@ -233,7 +291,6 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: "800", color: palette.text },
   address: { color: palette.sub, marginVertical: 4 },
 
-  // Rating
   ratingBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -286,5 +343,21 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#fff",
     marginHorizontal: 3,
+  },
+
+  // ✅ STYLE NÚT GỬI ĐÁNH GIÁ
+  feedbackBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: palette.primary,
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginVertical: 12,
+  },
+  feedbackText: {
+    color: "#fff",
+    fontWeight: "700",
+    marginLeft: 6,
   },
 });
