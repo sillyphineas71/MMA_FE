@@ -92,7 +92,7 @@ export default function OwnerSubPitchEditScreen({ navigation, route }) {
     };
 
     try {
-      await apiPut(`api/owner/sub-pitches/${subPitch._id}`, payload);
+      await apiPut(`/api/owner/sub-pitches/${subPitch._id}`, payload);
       Alert.alert("✅ Thành công", "Đã cập nhật sân con!");
       navigation.goBack();
     } catch (err) {
