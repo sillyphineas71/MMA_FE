@@ -16,7 +16,7 @@ import OwnerSubPitchListScreen from "../screens/OwnerSubPitchListScreen";
 import OwnerSubPitchCreateScreen from "../screens/OwnerSubPitchCreateScreen";
 import OwnerSubPitchEditScreen from "../screens/OwnerSubPitchEditScreen";
 import OwnerReviewListScreen from "../screens/OwnerReviewListScreen";
-
+import OwnerBookingsScreen from "../screens/OwnerBookingsScreen";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -83,6 +83,11 @@ export default function OwnerStack() {
         name="Calendar"
         component={OwnerCalendarScreen}
         options={{ title: "Lịch sân" }}
+      />
+      <Tab.Screen
+        name="Bookings"
+        component={OwnerBookingsScreen}
+        options={{ title: "Đặt sân" }}
       />
       <Tab.Screen
         name="Manage"
