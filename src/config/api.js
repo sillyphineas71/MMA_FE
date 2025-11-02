@@ -19,7 +19,7 @@ function resolveBaseURL() {
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
   // 4) Fallback: ask user to set env if detection fails
-  return "http://192.168.1.8:9999"; // CHANGE_ME to your PC LAN IP if needed
+  return "http://192.168.1.20:9999"; // CHANGE_ME to your PC LAN IP if needed
 }
 
 export const API_BASE = resolveBaseURL();
@@ -38,9 +38,8 @@ function toQuery(params) {
 export async function apiGet(path, params) {
   const hasQueryInPath = typeof path === "string" && path.includes("?");
   const qs = toQuery(params);
-  const url = `${API_BASE}${path}${
-    hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
-  }`;
+  const url = `${API_BASE}${path}${hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
+    }`;
   const token = await AsyncStorage.getItem("userToken");
 
   const headers = {

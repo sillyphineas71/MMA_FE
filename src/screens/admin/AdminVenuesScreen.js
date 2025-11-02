@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { apiGet } from "../../config/api";
+import { apiGet, apiPatch } from "../../config/api";
 import { palette, spacing, radius, shadow } from "../../theme/theme";
 
 // Match backend Venue.status enum: ["active", "hidden"]
@@ -50,6 +51,27 @@ export default function AdminVenuesScreen() {
     }
   };
 
+  const handleToggleStatus = async (venueId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "hidden" ? "active" : "hidden";
+
+      await apiPatch(`/api/admin/venues/${venueId}/status`, { status: newStatus });
+
+      // Cập nhật UI (optimistic update)
+      setVenues(prev =>
+        prev.map(v => v._id === venueId ? { ...v, status: newStatus } : v)
+      );
+
+      Alert.alert(
+        "Thành công",
+        `Sân đã được ${newStatus === "hidden" ? "ẩn" : "hiển thị"}.`
+      );
+    } catch (error) {
+      console.error("Toggle venue status error:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật trạng thái sân.");
+    }
+  };
+
   const Chip = ({ text, active, onPress }) => (
     <TouchableOpacity
       onPress={onPress}
@@ -84,24 +106,47 @@ export default function AdminVenuesScreen() {
   );
 
   const renderItem = ({ item }) => {
-    const statusColor = item.status === "active" ? "#6FCF97" : "#FFB020";
+    const isHidden = item.status === "hidden";
+    const statusColor = isHidden ? "#FFB020" : "#6FCF97";
+
     return (
       <View style={styles.card}>
         <View style={styles.venueHeader}>
           <View style={styles.venueIcon}>
-            <Ionicons name="home-outline" size={18} color="#4E9F69" />
+            <Ionicons name="home-outline" size={18} color="#4Elk9F69" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{item.name}</Text>
             <Text style={styles.info}>{item.address || "(No address)"}</Text>
           </View>
-          <Badge text={item.status} color={statusColor} />
+          <Badge text={isHidden ? "Hidden" : "Active"} color={statusColor} />
         </View>
+
         {item?.ownerId ? (
           <Text style={styles.meta}>
             Owner: {item.ownerId?.name || item.ownerId}
           </Text>
         ) : null}
+
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={[
+              styles.actionBtn,
+              isHidden ? styles.btnActivate : styles.btnBan,
+            ]}
+            activeOpacity={0.85}
+            onPress={() => handleToggleStatus(item._id, item.status)}
+          >
+            <Ionicons
+              name={isHidden ? "checkmark-circle-outline" : "ban-outline"}
+              size={16}
+              color="#fff"
+            />
+            <Text style={styles.actionText}>
+              {isHidden ? "Activate" : "Hide"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -251,4 +296,22 @@ const styles = StyleSheet.create({
   emptyBox: { alignItems: "center", marginTop: spacing.xl },
   emptyTitle: { color: palette.text, fontWeight: "700", marginTop: spacing.sm },
   emptySub: { color: palette.sub, marginTop: 2 },
+
+  actionsRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  actionBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: radius.md,
+  },
+  btnBan: { backgroundColor: "#FF6B6B" },
+  btnActivate: { backgroundColor: "#6FCF97" },
+  actionText: { color: "#fff", fontWeight: "700" },
 });

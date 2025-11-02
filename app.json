@@ -24,7 +24,7 @@
       "usesCleartextTraffic": true
     },
     "extra": {
-      "apiBase": "http://192.168.1.8:9999"
+      "apiBase": "http://192.168.1.20:9999"
     },
     "web": {
       "favicon": "./assets/favicon.png"

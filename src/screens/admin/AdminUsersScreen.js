@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { apiGet, apiPatch } from "../../config/api"; // dùng apiPatch cho PATCH
 import { palette, spacing, radius, shadow } from "../../theme/theme";
 
-const ROLE_FILTERS = ["All roles", "Admin", "Owner", "Customer"];
+const ROLE_FILTERS = ["All roles", "Owner", "Customer"];
 const STATUS_FILTERS = ["All", "Active", "Banned"];
 
 export default function AdminUsersScreen() {
@@ -35,9 +35,21 @@ export default function AdminUsersScreen() {
         search,
       };
       const res = await apiGet("/api/admin/users", params);
-      setUsers(Array.isArray(res.data) ? res.data : []);
+
+      // LỌC BỎ ADMIN TRƯỚC KHI SET STATE
+      const filteredUsers = (Array.isArray(res.data) ? res.data : []).filter(user => {
+        const roles = Array.isArray(user.roles)
+          ? user.roles
+          : user.role
+            ? [user.role]
+            : [];
+        return !roles.includes("admin");
+      });
+
+      setUsers(filteredUsers);
     } catch (e) {
       console.error("Fetch users error:", e.message);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -55,6 +67,29 @@ export default function AdminUsersScreen() {
       setRefreshing(false);
     }
   };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "banned" ? "active" : "banned";
+
+      await apiPatch(`/api/admin/users/${userId}/status`, { status: newStatus });
+
+      setUsers(prevUsers =>
+        prevUsers.map(user =>
+          user._id === userId ? { ...user, status: newStatus } : user
+        )
+      );
+
+      Alert.alert(
+        "Thành công",
+        `Người dùng đã được ${newStatus === "banned" ? "cấm" : "kích hoạt"}.`
+      );
+    } catch (error) {
+      console.error("Toggle status error:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật trạng thái người dùng.");
+    }
+  };
+
   const Badge = ({ text, color = palette.primary }) => (
     <View
       style={[
@@ -93,8 +128,8 @@ export default function AdminUsersScreen() {
     const roles = Array.isArray(item.roles)
       ? item.roles
       : item.role
-      ? [item.role]
-      : [];
+        ? [item.role]
+        : [];
     const isBanned = item.status === "banned";
     return (
       <View style={styles.card}>
@@ -125,8 +160,8 @@ export default function AdminUsersScreen() {
                   r === "admin"
                     ? "#7DD957"
                     : r === "owner"
-                    ? "#6FCF97"
-                    : "#4E9F69"
+                      ? "#6FCF97"
+                      : "#4E9F69"
                 }
               />
             ))
