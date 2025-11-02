@@ -9,8 +9,8 @@ import {
     TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { apiGet } from "../../config/api";
-import { palette, spacing, radius, shadow } from "../../theme/theme";
+import { apiGet } from "../config/api";
+import { palette, spacing, radius, shadow } from "../theme/theme";
 
 export default function OwnerBookingsScreen() {
     const [bookings, setBookings] = useState([]);
@@ -38,7 +38,7 @@ export default function OwnerBookingsScreen() {
                 to: toDate || "",
             };
             const res = await apiGet("/api/owner/bookings", params);
-            setBookings(Array.isArray(res.data) ? res.data : []);
+            setBookings(Array.isArray(res) ? res : res.data || []);
         } catch (e) {
             console.error("Fetch owner bookings error:", e.message);
         } finally {
