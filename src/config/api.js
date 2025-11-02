@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 import Constants from "expo-constants";
-import AsyncStorage from "@react-native-async-storage/async-storage"; // THÊM
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Resolve backend base URL across emulator, simulator and physical devices.
 function resolveBaseURL() {
@@ -35,16 +35,30 @@ function toQuery(params) {
   return q ? `?${q}` : "";
 }
 
+async function parseResponse(res) {
+  const text = await res.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch (_) {
+    data = { raw: text };
+  }
+  if (!res.ok) {
+    const message = data?.message || `HTTP ${res.status}`;
+    throw new Error(message);
+  }
+  return data;
+}
+
 export async function apiGet(path, params) {
   const hasQueryInPath = typeof path === "string" && path.includes("?");
   const qs = toQuery(params);
-  const url = `${API_BASE}${path}${hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
-    }`;
+  const url = `${API_BASE}${path}${
+    hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
+  }`;
   const token = await AsyncStorage.getItem("userToken");
 
-  const headers = {
-    Accept: "application/json",
-  };
+  const headers = { Accept: "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res;
@@ -55,79 +69,35 @@ export async function apiGet(path, params) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-
-  const text = await res.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { raw: text };
-  }
-
-  if (!res.ok) {
-    const message = data?.message || `HTTP ${res.status}`;
-    throw new Error(message);
-  }
-
-  // Normalize array payload for admin screens expecting res.data
-  if (Array.isArray(data)) {
-    return { data };
-  }
+  const data = await parseResponse(res);
   return data;
 }
 
 export async function apiPost(path, body) {
   const url = `${API_BASE}${path}`;
-  const token = await AsyncStorage.getItem("userToken"); // Lấy token
-
-  const headers = {
-    "Content-Type": "application/json",
-  };
-
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`; // Gắn token
-  }
-
-  const options = {
-    method: "POST",
-    headers,
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res;
   try {
-    res = await fetch(url, options);
+    res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
   } catch (e) {
     throw new Error(
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
-  const text = await res.text();
-  let data;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { raw: text };
-  }
-
-  if (!res.ok) {
-    const message = data?.message || `HTTP ${res.status}`;
-    throw new Error(message);
-  }
-
-  return data;
+  return await parseResponse(res);
 }
 
 export async function apiPatch(path, body) {
   const url = `${API_BASE}${path}`;
   const token = await AsyncStorage.getItem("userToken");
-
-  const headers = {
-    "Content-Type": "application/json",
-  };
+  const headers = { "Content-Type": "application/json" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   let res;
@@ -142,19 +112,92 @@ export async function apiPatch(path, body) {
       `Network request failed to ${url}. Check LAN/server/firewall.`
     );
   }
+  return await parseResponse(res);
+}
 
-  const text = await res.text();
-  let data;
+export async function apiPut(path, body) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
   try {
-    data = text ? JSON.parse(text) : {};
-  } catch (_) {
-    data = { raw: text };
+    res = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch (e) {
+    throw new Error(
+      `Network PUT failed to ${url}. Check your connection or backend.`
+    );
   }
 
-  if (!res.ok) {
-    const message = data?.message || `HTTP ${res.status}`;
-    throw new Error(message);
+  return await parseResponse(res);
+}
+
+export async function apiDelete(path) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "DELETE",
+      headers,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network DELETE failed to ${url}. Check your connection or backend.`
+    );
   }
 
-  return data;
+  return await parseResponse(res);
+}
+
+export async function apiPutForm(path, formData) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "PUT",
+      headers,
+      body: formData,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network PUT Form failed to ${url}. Check your connection.`
+    );
+  }
+
+  return await parseResponse(res);
+}
+
+export async function apiPostForm(path, formData) {
+  const url = `${API_BASE}${path}`;
+  const token = await AsyncStorage.getItem("userToken");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res;
+  try {
+    res = await fetch(url, {
+      method: "POST",
+      headers,
+      body: formData,
+    });
+  } catch (e) {
+    throw new Error(
+      `Network POST Form failed to ${url}. Check your connection.`
+    );
+  }
+
+  return await parseResponse(res);
 }

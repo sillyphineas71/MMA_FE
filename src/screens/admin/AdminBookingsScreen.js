@@ -7,6 +7,8 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
+  ScrollView,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { apiGet } from "../../config/api";
@@ -35,9 +37,20 @@ export default function AdminBookingsScreen() {
       const res = await apiGet("/api/admin/bookings", {
         status: STATUS_FILTERS.find((f) => f.label === status)?.value || "",
       });
-      setBookings(Array.isArray(res.data) ? res.data : []);
+      // Normalize response: accept array or wrapped shapes
+      const list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.bookings)
+        ? res.bookings
+        : Array.isArray(res?.results)
+        ? res.results
+        : [];
+      setBookings(list);
     } catch (e) {
       console.error("Fetch bookings error:", e.message);
+      Alert.alert("Lỗi tải Bookings", e.message);
     } finally {
       setLoading(false);
     }
@@ -135,10 +148,8 @@ export default function AdminBookingsScreen() {
         />
       </View>
 
-      <FlatList
+      <ScrollView
         horizontal
-        data={STATUS_FILTERS}
-        keyExtractor={(i) => i.label}
         showsHorizontalScrollIndicator={false}
         style={styles.chipList}
         contentContainerStyle={{
@@ -146,14 +157,16 @@ export default function AdminBookingsScreen() {
           marginTop: spacing.xs,
           alignItems: "center",
         }}
-        renderItem={({ item }) => (
+      >
+        {STATUS_FILTERS.map((item) => (
           <Chip
+            key={item.label}
             text={item.label}
             active={status === item.label}
             onPress={() => setStatus(item.label)}
           />
-        )}
-      />
+        ))}
+      </ScrollView>
 
       {loading ? (
         <View style={{ paddingTop: spacing.lg }}>
@@ -230,7 +243,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xs,
     paddingVertical: 6,
   },
-  chipList: { maxHeight: 54 },
+  chipList: { marginBottom: spacing.sm },
   chip: {
     backgroundColor: "#F0F7F3",
     borderRadius: 18,

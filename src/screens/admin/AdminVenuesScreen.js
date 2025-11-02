@@ -30,9 +30,20 @@ export default function AdminVenuesScreen() {
         status: status === "All" ? "" : status.toLowerCase(),
         search,
       });
-      setVenues(Array.isArray(res.data) ? res.data : []);
+      // Normalize response: accept array or wrapped shapes
+      const list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.venues)
+        ? res.venues
+        : Array.isArray(res?.results)
+        ? res.results
+        : [];
+      setVenues(list);
     } catch (e) {
       console.error("Fetch venues error:", e.message);
+      Alert.alert("Lỗi tải Venues", e.message);
     } finally {
       setLoading(false);
     }
@@ -173,32 +184,21 @@ export default function AdminVenuesScreen() {
         />
       </View>
 
-      <FlatList
-        horizontal
-        data={STATUS_FILTERS}
-        keyExtractor={(i) => i}
-        showsHorizontalScrollIndicator={false}
-        style={styles.chipList}
-        contentContainerStyle={{
-          paddingHorizontal: spacing.xs,
-          marginTop: spacing.xs,
-          alignItems: "center",
-        }}
-        renderItem={({ item }) => (
+      <View style={styles.chipsRow}>
+        {STATUS_FILTERS.map((item) => (
           <Chip
+            key={item}
             text={item}
             active={status === item}
             onPress={() => setStatus(item)}
           />
-        )}
-      />
+        ))}
+      </View>
 
       {loading ? (
         <View style={{ paddingTop: spacing.lg }}>
           <ActivityIndicator size="large" color={palette.primary} />
         </View>
-      ) : venues.length === 0 ? (
-        <EmptyState />
       ) : (
         <FlatList
           data={venues}
@@ -206,6 +206,7 @@ export default function AdminVenuesScreen() {
           renderItem={renderItem}
           refreshing={refreshing}
           onRefresh={onRefresh}
+          ListEmptyComponent={<EmptyState />}
           contentContainerStyle={{ paddingBottom: spacing.xl }}
         />
       )}
@@ -250,7 +251,14 @@ const styles = StyleSheet.create({
     borderColor: palette.border,
     alignSelf: "flex-start",
   },
-  chipList: { maxHeight: 54 },
+  chipsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: spacing.xs,
+    marginTop: spacing.xs,
+    marginBottom: spacing.sm,
+    minHeight: 40,
+  },
   chipActive: {
     backgroundColor: palette.primary,
     borderColor: palette.primaryDark,

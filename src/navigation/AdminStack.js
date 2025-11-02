@@ -6,6 +6,7 @@ import AdminVenuesScreen from "../screens/admin/AdminVenuesScreen";
 import AdminBookingsScreen from "../screens/admin/AdminBookingsScreen";
 import { Ionicons } from "@expo/vector-icons";
 import AdminDashboardScreen from "../screens/AdminDashboardScreen";
+import WithdrawalAdminScreen from "../screens/WithdrawalAdminScreen";
 import { useAuth } from "../context/AuthContext";
 
 const Tab = createBottomTabNavigator();
@@ -20,6 +21,7 @@ export default function AdminStack() {
           if (route.name === "Users") iconName = "people-outline";
           else if (route.name === "Venues") iconName = "home-outline";
           else if (route.name === "Bookings") iconName = "calendar-outline";
+          else if (route.name === "Withdrawals") iconName = "cash-outline";
           else if (route.name === "Dashboard") iconName = "analytics-outline";
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -36,6 +38,7 @@ export default function AdminStack() {
       <Tab.Screen name="Users" component={AdminUsersScreen} />
       <Tab.Screen name="Venues" component={AdminVenuesScreen} />
       <Tab.Screen name="Bookings" component={AdminBookingsScreen} />
+      <Tab.Screen name="Withdrawals" component={WithdrawalAdminScreen} />
       <Tab.Screen name="Dashboard" component={AdminDashboardScreen} />
     </Tab.Navigator>
   );

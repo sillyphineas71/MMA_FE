@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react"; // THÊM useContext
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -36,7 +36,22 @@ export default function LoginScreen({ navigation }) {
         throw new Error(res?.message || "Phản hồi đăng nhập không hợp lệ");
       }
     } catch (e) {
-      Alert.alert("Lỗi", e.message);
+      const msg = String(e?.message || "");
+      if (msg.includes("Email chưa được xác minh")) {
+        Alert.alert(
+          "Cần xác minh",
+          "Email của bạn chưa được xác minh. Vui lòng nhập mã OTP.",
+          [
+            {
+              text: "Xác minh ngay",
+              onPress: () => navigation.navigate("VerifyEmail", { email }),
+            },
+            { text: "Đóng" },
+          ]
+        );
+      } else {
+        Alert.alert("Lỗi", msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -127,7 +142,9 @@ export default function LoginScreen({ navigation }) {
                 />
                 <Text style={styles.mutedSmall}> Nhớ đăng nhập</Text>
               </View>
-              <TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate("ForgotPassword")}
+              >
                 <Text
                   style={[
                     styles.mutedSmall,

@@ -35,21 +35,28 @@ export default function AdminUsersScreen() {
         search,
       };
       const res = await apiGet("/api/admin/users", params);
-
-      // LỌC BỎ ADMIN TRƯỚC KHI SET STATE
-      const filteredUsers = (Array.isArray(res.data) ? res.data : []).filter(user => {
+      // Normalize response to list then filter out admin accounts
+      const list = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.data)
+        ? res.data
+        : Array.isArray(res?.users)
+        ? res.users
+        : Array.isArray(res?.results)
+        ? res.results
+        : [];
+      const filtered = list.filter((user) => {
         const roles = Array.isArray(user.roles)
           ? user.roles
           : user.role
-            ? [user.role]
-            : [];
+          ? [user.role]
+          : [];
         return !roles.includes("admin");
       });
-
-      setUsers(filteredUsers);
+      setUsers(filtered);
     } catch (e) {
       console.error("Fetch users error:", e.message);
-      setUsers([]);
+      Alert.alert("Lỗi tải Users", e.message);
     } finally {
       setLoading(false);
     }
@@ -58,6 +65,8 @@ export default function AdminUsersScreen() {
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
+
+  // Toggle ban/activate user (updates local list optimistically)
 
   const onRefresh = async () => {
     try {
@@ -72,10 +81,12 @@ export default function AdminUsersScreen() {
     try {
       const newStatus = currentStatus === "banned" ? "active" : "banned";
 
-      await apiPatch(`/api/admin/users/${userId}/status`, { status: newStatus });
+      await apiPatch(`/api/admin/users/${userId}/status`, {
+        status: newStatus,
+      });
 
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
           user._id === userId ? { ...user, status: newStatus } : user
         )
       );
@@ -128,8 +139,8 @@ export default function AdminUsersScreen() {
     const roles = Array.isArray(item.roles)
       ? item.roles
       : item.role
-        ? [item.role]
-        : [];
+      ? [item.role]
+      : [];
     const isBanned = item.status === "banned";
     return (
       <View style={styles.card}>
@@ -160,8 +171,8 @@ export default function AdminUsersScreen() {
                   r === "admin"
                     ? "#7DD957"
                     : r === "owner"
-                      ? "#6FCF97"
-                      : "#4E9F69"
+                    ? "#6FCF97"
+                    : "#4E9F69"
                 }
               />
             ))

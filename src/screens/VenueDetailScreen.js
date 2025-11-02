@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { API_BASE } from "../config/api";
@@ -14,61 +15,120 @@ import { palette, spacing } from "../theme/theme";
 import GradientButton from "../components/GradientButton";
 import ReviewCard from "../components/ReviewCard";
 
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
 export default function VenueDetailScreen({ route, navigation }) {
   const { id } = route.params;
   const [venue, setVenue] = useState(null);
+  const [subPitches, setSubPitches] = useState([]);
   const [reviews, setReviews] = useState([]);
-  const [canReview, setCanReview] = useState(false);
-  const [refreshTrigger, setRefreshTrigger] = useState(0); // ← Để reload
+  const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
+    async function fetchData() {
+      try {
+        // 1) Venue details
+        const resVenue = await fetch(`${API_BASE}/api/venues/${id}`);
+        if (!resVenue.ok)
+          throw new Error(`Venue not found (${resVenue.status})`);
+        const venueData = await resVenue.json();
+        setVenue(venueData);
+
+        // 2) Sub-pitches of this venue
+        const resSubs = await fetch(`${API_BASE}/api/venues/${id}/sub-pitches`);
+        if (resSubs.ok) {
+          const subsData = await resSubs.json();
+          setSubPitches(Array.isArray(subsData) ? subsData : []);
+          // 3) Reviews for first sub-pitch (if any)
+          if (Array.isArray(subsData) && subsData.length > 0) {
+            const firstSub = subsData[0];
+            const resReviews = await fetch(
+              `${API_BASE}/api/sub-pitches/${firstSub._id}/reviews`
+            );
+            if (resReviews.ok) {
+              const reviewData = await resReviews.json();
+              setReviews(Array.isArray(reviewData) ? reviewData : []);
+            }
+          } else {
+            setReviews([]);
+          }
+        } else {
+          setSubPitches([]);
+          setReviews([]);
+        }
+      } catch (err) {
+        console.error("Error loading venue detail:", err);
+        Alert.alert("Lỗi", "Không thể tải dữ liệu sân");
+      }
+    }
+
     fetchData();
-    checkCanReview();
-  }, [id, refreshTrigger]); // ← Reload khi refreshTrigger thay đổi
+  }, [id]);
 
-  const fetchData = async () => {
-    try {
-      const [venueRes, reviewsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/venues/${id}`),
-        fetch(`${API_BASE}/api/reviews/venue/${id}`), // ← API MỚI
-      ]);
+  if (!venue)
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text>Đang tải thông tin sân...</Text>
+      </View>
+    );
 
-      const venueData = await venueRes.json();
-      setVenue(venueData);
-
-      const reviewsData = await reviewsRes.json();
-      setReviews(reviewsData || []);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      Alert.alert("Lỗi", "Không thể tải dữ liệu sân");
-    }
-  };
-
-  const checkCanReview = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/api/bookings/user/completed?venueId=${id}`, {
-        headers: { Authorization: `Bearer ${/* your token */ ""}` },
-      });
-      const data = await res.json();
-      setCanReview(Array.isArray(data) && data.length > 0);
-    } catch (error) {
-      setCanReview(false);
-    }
-  };
-
-  if (!venue) return <Text style={styles.loading}>Đang tải...</Text>;
+  // Collect images from all sub-pitches for the carousel
+  const subPitchImages = subPitches.flatMap((sp) =>
+    Array.isArray(sp.images) ? sp.images : []
+  );
 
   return (
-    <ScrollView style={styles.container}>
-      <Image
-        source={{ uri: venue.images?.[0] || venue.image || "https://placehold.co/600x300" }}
-        style={styles.banner}
-      />
+    <ScrollView style={{ backgroundColor: palette.bg }}>
+      {/* Images carousel from sub-pitches */}
+      <View style={styles.imageContainer}>
+        <ScrollView
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          onScroll={(e) => {
+            const index = Math.round(
+              e.nativeEvent.contentOffset.x /
+                e.nativeEvent.layoutMeasurement.width
+            );
+            setActiveImage(index);
+          }}
+          scrollEventThrottle={16}
+        >
+          {subPitchImages.length > 0 ? (
+            subPitchImages.map((uri, idx) => (
+              <Image
+                key={idx}
+                source={{ uri }}
+                style={styles.banner}
+                resizeMode="cover"
+              />
+            ))
+          ) : (
+            <Image
+              source={{
+                uri: "https://placehold.co/800x400?text=No+Image+Available",
+              }}
+              style={styles.banner}
+              resizeMode="cover"
+            />
+          )}
+        </ScrollView>
+        <View style={styles.dotsContainer}>
+          {(subPitchImages.length > 0 ? subPitchImages : [0]).map((_, i) => (
+            <View
+              key={i}
+              style={[styles.dot, { opacity: i === activeImage ? 1 : 0.3 }]}
+            />
+          ))}
+        </View>
+      </View>
+
       <View style={styles.content}>
+        {/* Venue info */}
         <Text style={styles.title}>{venue.name}</Text>
         <Text style={styles.address}>{venue.address}</Text>
 
-        {/* RATING TRUNG BÌNH */}
+        {/* Rating (if available) */}
         <View style={styles.ratingBox}>
           <Text style={styles.avgRating}>
             {venue.ratingAvg ? venue.ratingAvg.toFixed(1) : "Chưa có"}
@@ -78,7 +138,9 @@ export default function VenueDetailScreen({ route, navigation }) {
               <Ionicons
                 key={i}
                 name={
-                  i <= Math.round(venue.ratingAvg || 0) ? "star" : "star-outline"
+                  i <= Math.round(venue.ratingAvg || 0)
+                    ? "star"
+                    : "star-outline"
                 }
                 size={18}
                 color="#FFD700"
@@ -90,30 +152,70 @@ export default function VenueDetailScreen({ route, navigation }) {
           </Text>
         </View>
 
-        {/* NÚT ĐẶT SÂN */}
+        {/* Book now */}
         <GradientButton
           title="Đặt sân ngay"
-          onPress={() => navigation.navigate("SlotSelection", { id })}
+          onPress={() => {
+            if (subPitches.length > 0) {
+              const firstSub = subPitches[0];
+              navigation.navigate("SlotSelection", {
+                id: firstSub._id,
+                images:
+                  Array.isArray(firstSub.images) && firstSub.images.length > 0
+                    ? firstSub.images
+                    : Array.isArray(venue.images)
+                    ? venue.images
+                    : [],
+              });
+            } else {
+              Alert.alert("Thông báo", "Chưa có sân con để đặt!");
+            }
+          }}
           style={{ marginVertical: 16 }}
         />
 
-        {/* NÚT VIẾT ĐÁNH GIÁ – CHỈ HIỆN NẾU ĐƯỢC PHÉP */}
-        {canReview && (
-          <TouchableOpacity
-            style={styles.reviewBtn}
-            onPress={() =>
-              navigation.navigate("Feedback", {
-                venueId: id,
-                onReviewSubmitted: () => setRefreshTrigger(Date.now()), // ← GỌI LẠI ĐỂ RELOAD
-              })
-            }
-          >
-            <Ionicons name="pencil" size={16} color={palette.primary} />
-            <Text style={styles.reviewBtnText}>Viết đánh giá</Text>
-          </TouchableOpacity>
+        {/* Sub-pitches list */}
+        <Text style={styles.sectionTitle}>Danh sách sân con</Text>
+        {subPitches.length === 0 ? (
+          <Text style={styles.noReview}>Chưa có sân con nào</Text>
+        ) : (
+          subPitches.map((s) => (
+            <TouchableOpacity
+              key={s._id}
+              style={styles.subCard}
+              onPress={() =>
+                navigation.navigate("SlotSelection", {
+                  id: s._id,
+                  images: s.images || venue.images || [],
+                })
+              }
+            >
+              <Text style={styles.subName}>{s.name}</Text>
+              <Text>Loại sân: {s.type}</Text>
+              <Text>
+                Trạng thái:{" "}
+                {s.active ? "Đang hoạt động ✅" : "Ngừng hoạt động ❌"}
+              </Text>
+
+              {Array.isArray(s.bookableBlocks) &&
+                s.bookableBlocks.length > 0 && (
+                  <>
+                    <Text style={{ fontWeight: "600", marginTop: 6 }}>
+                      Khung giờ đặt được:
+                    </Text>
+                    {s.bookableBlocks.map((b) => (
+                      <Text key={b.label}>
+                        ⏰ {b.start} - {b.end} —{" "}
+                        {s.blockPrices?.[`${b.start}-${b.end}`]}đ
+                      </Text>
+                    ))}
+                  </>
+                )}
+            </TouchableOpacity>
+          ))
         )}
 
-        {/* DANH SÁCH ĐÁNH GIÁ */}
+        {/* Reviews */}
         <Text style={styles.sectionTitle}>Đánh giá</Text>
         {reviews.length === 0 ? (
           <Text style={styles.noReview}>Chưa có đánh giá nào</Text>
@@ -127,13 +229,11 @@ export default function VenueDetailScreen({ route, navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.bg },
-  banner: { width: "100%", height: 200 },
   content: { padding: spacing.lg },
   title: { fontSize: 22, fontWeight: "800", color: palette.text },
   address: { color: palette.sub, marginVertical: 4 },
-  loading: { textAlign: "center", marginTop: 20, color: palette.sub },
 
-  // RATING
+  // Rating
   ratingBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -147,19 +247,44 @@ const styles = StyleSheet.create({
   stars: { flexDirection: "row", marginRight: 8 },
   reviewCount: { color: palette.sub, fontSize: 14 },
 
-  // NÚT VIẾT ĐÁNH GIÁ
-  reviewBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: palette.card,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    alignSelf: "flex-start",
-  },
-  reviewBtnText: { marginLeft: 6, color: palette.primary, fontWeight: "600" },
-
-  // ĐÁNH GIÁ
-  sectionTitle: { fontWeight: "700", marginTop: 10 },
+  sectionTitle: { fontWeight: "700", marginTop: 10, marginBottom: 4 },
   noReview: { color: palette.sub, marginVertical: 10 },
+  subCard: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 10,
+    marginVertical: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  subName: { fontWeight: "bold", fontSize: 16, marginBottom: 4 },
+
+  imageContainer: {
+    width: "100%",
+    height: SCREEN_WIDTH * 0.55,
+    backgroundColor: "#f2f2f2",
+    position: "relative",
+    marginBottom: 16,
+  },
+  banner: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH * 0.55,
+    backgroundColor: "#ddd",
+  },
+  dotsContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    position: "absolute",
+    bottom: 8,
+    width: "100%",
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#fff",
+    marginHorizontal: 3,
+  },
 });
