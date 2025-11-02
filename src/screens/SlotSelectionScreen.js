@@ -27,35 +27,44 @@ export default function SlotSelectionScreen({ route, navigation }) {
   const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD
 
   // 🛰️ Load danh sách slot
-  const fetchSlots = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(
-        `${API_BASE}/api/sub-pitches/${id}/slots?date=${formattedDate}`
-      );
-      if (!res.ok) throw new Error("API error");
-      const data = await res.json();
+const fetchSlots = async () => {
+  try {
+    setLoading(true);
+    const res = await fetch(
+      `${API_BASE}/api/sub-pitches/${id}/slots?date=${formattedDate}`
+    );
+    if (!res.ok) throw new Error("API error");
+    const data = await res.json();
 
-      const normalized = (data.available || []).map((s) => {
-  let status = "available";
+    const now = new Date(); // Thời gian hiện tại (giờ Việt Nam nếu thiết bị đúng timezone)
 
-  if (s.booked || s.paymentResult === "success") {
-    status = "booked"; // 🔴
-  } else if (
-    s.held &&
-    (s.paymentResult === "pending" || s.paymentResult === "fail")
-  ) {
-    status = "hold"; // 🟡 Giữ vàng cho pending/fail
-  }
-  
-  return {
-    ...s,
-    status,
-    paymentResult: s.paymentResult || null,
-    holdId: s._id || null,
-  };
-});
-    
+    const normalized = (data.available || []).map((s) => {
+      let status = "available";
+
+      if (s.booked || s.paymentResult === "success") {
+        status = "booked"; // 🔴 Đã thanh toán
+      } else if (
+        s.held &&
+        (s.paymentResult === "pending" || s.paymentResult === "fail")
+      ) {
+        status = "hold"; // 🟡 Giữ chỗ (đang chờ / thất bại)
+      }
+
+      // ⚡ Nếu ngày là hôm nay → kiểm tra xem giờ bắt đầu đã qua chưa
+      const slotStartTime = new Date(`${formattedDate}T${s.start}:00`);
+      const todayStr = now.toLocaleDateString("en-CA");
+      if (formattedDate === todayStr && slotStartTime <= now) {
+        status = "expired"; // ⚫ Đánh dấu hết hạn (quá giờ)
+      }
+
+      return {
+        ...s,
+        status,
+        paymentResult: s.paymentResult || null,
+        holdId: s._id || null,
+      };
+    });
+
     // Cập nhật toàn bộ slots
     setSlots(normalized);
 
@@ -66,14 +75,13 @@ export default function SlotSelectionScreen({ route, navigation }) {
         setSelectedSlot(updated);
       }
     }
-      setSlots(normalized);
-    } catch (err) {
-      console.error("🚨 Fetch slots error:", err);
-      setSlots([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+  } catch (err) {
+    console.error("🚨 Fetch slots error:", err);
+    setSlots([]);
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchSlots();
@@ -324,12 +332,13 @@ if (status === "hold" && paymentResult === "pending") {
 
               if (slot.status === "hold") bgStyle = styles.slotPending;
               else if (slot.status === "booked") bgStyle = styles.slotBooked;
+              else if (slot.status === "expired") bgStyle = styles.slotExpired;
 
               return (
                 <TouchableOpacity
                   key={slot.slotIndex}
                   style={[styles.slot, bgStyle]}
-                  disabled={slot.status === "booked"}
+                  disabled={slot.status === "booked"|| slot.status === "expired"}
                   onPress={() => {
                     if (slot.status === "available") holdSlot(slot);
                     if (slot.status === "pending" || slot.status === "hold") {
@@ -432,4 +441,6 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 20,
   },
+  slotExpired: { backgroundColor: "#9E9E9E" },
+
 });

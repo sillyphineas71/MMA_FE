@@ -1,40 +1,36 @@
 import React from "react";
 import { TouchableOpacity, StyleSheet } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  CommonActions,
+  useNavigation,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// Auth context
+// 🔐 Auth context
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
-// Theme
+// 🎨 Theme
 import { palette } from "./src/theme/theme";
 
-// Auth flow screens
+// 🔑 Auth flow screens
 import LoginScreen from "./src/screens/LoginScreen";
 import RegisterScreen from "./src/screens/RegisterScreen2";
 import VerifyEmailScreen from "./src/screens/VerifyEmailScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/ResetPasswordScreen";
 
-// Admin (tabs) and Owner/Customer flows
+// 🧭 Admin & Owner stacks
 import AdminStack from "./src/navigation/AdminStack";
-import OwnerDashboardScreen from "./src/screens/OwnerDashboardScreen";
 import OwnerStack from "./src/navigation/OwnerStack";
 
-// Booking flow
+// ⚽ Booking flow (Customer)
 import HomeScreen from "./src/screens/HomeScreen";
 import VenueDetailScreen from "./src/screens/VenueDetailScreen";
 import SlotSelectionScreen from "./src/screens/SlotSelectionScreen";
 import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
-import OwnerVenueListScreen from "./src/screens/OwnerVenueListScreen";
-import OwnerVenueCreateScreen from "./src/screens/OwnerVenueCreateScreen";
-import OwnerVenueEditScreen from "./src/screens/OwnerVenueEditScreen";
-import OwnerSubPitchListScreen from "./src/screens/OwnerSubPitchListScreen";
-import OwnerSubPitchCreateScreen from "./src/screens/OwnerSubPitchCreateScreen";
-import OwnerSubPitchEditScreen from "./src/screens/OwnerSubPitchEditScreen";
-import OwnerReviewListScreen from "./src/screens/OwnerReviewListScreen";
 
 // 💳 Payment Screens
 import PaymentSuccessScreen from "./src/screens/PaymentSuccessScreen";
@@ -42,6 +38,9 @@ import PaymentFailScreen from "./src/screens/PaymentFailScreen";
 
 const Stack = createNativeStackNavigator();
 
+// ===============================================
+// 🔹 AUTH STACK (Login, Register, Forgot Password, v.v.)
+// ===============================================
 function AuthStack() {
   return (
     <Stack.Navigator
@@ -57,27 +56,40 @@ function AuthStack() {
   );
 }
 
+// ===============================================
+// 🔹 APP STACK (sau khi login thành công)
+// ===============================================
 function AppStack() {
   const { user, signOut } = useAuth();
+  const navigation = useNavigation(); // ✅ lấy navigation để reset stack
+
+  // ✅ Đăng xuất và reset toàn bộ navigation về Login
+  const handleSignOut = async () => {
+  try {
+    await signOut(); // chỉ cần signOut, RootNavigator tự về Login
+  } catch (err) {
+    console.error("SignOut error:", err);
+  }
+};
+
 
   const SignOutButton = () => (
-    <TouchableOpacity onPress={signOut} style={styles.signOutButton}>
+    <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
       <Feather name="log-out" size={20} color={palette.primaryDark} />
     </TouchableOpacity>
   );
 
-  // Admin uses dedicated bottom tabs
+  // 🧩 Tùy vai trò người dùng
   if (user?.role === "admin") return <AdminStack />;
-
-  // Owner uses dedicated bottom tabs
   if (user?.role === "owner") return <OwnerStack />;
 
-  // Customer flow
+  // 👤 Flow cho khách hàng
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName="HomeDashboard"
       screenOptions={{ headerShown: false, animation: "slide_from_right" }}
     >
+      <Stack.Screen name="HomeDashboard" component={HomeDashboardScreen} />
       <Stack.Screen
         name="Home"
         component={HomeScreen}
@@ -105,27 +117,35 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
-      {/* Payment result screens (for deep links/redirects) */}
       <Stack.Screen
         name="PaymentSuccess"
         component={PaymentSuccessScreen}
-        options={{ headerShown: true, title: "Thanh toán thành công" }}
+        options={{
+          headerShown: true,
+          title: "Thanh toán thành công",
+        }}
       />
       <Stack.Screen
         name="PaymentFail"
         component={PaymentFailScreen}
-        options={{ headerShown: true, title: "Thanh toán thất bại" }}
+        options={{
+          headerShown: true,
+          title: "Thanh toán thất bại",
+        }}
       />
     </Stack.Navigator>
   );
 }
 
+// ===============================================
+// 🔹 ROOT NAVIGATOR (phân nhánh giữa Auth / App)
+// ===============================================
 function RootNavigator() {
   const { user } = useAuth();
+
   return (
     <NavigationContainer
       linking={{
-        // Deep link prefixes for dev; adjust IPs as needed in your LAN
         prefixes: [
           "exp://192.168.1.13:8081/--",
           "exp://192.168.1.13:19000/--",
@@ -152,6 +172,9 @@ function RootNavigator() {
   );
 }
 
+// ===============================================
+// 🔹 APP ENTRY POINT
+// ===============================================
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -162,6 +185,12 @@ export default function App() {
   );
 }
 
+// ===============================================
+// 🔹 STYLES
+// ===============================================
 const styles = StyleSheet.create({
-  signOutButton: { marginRight: 15, padding: 5 },
+  signOutButton: {
+    marginRight: 15,
+    padding: 5,
+  },
 });

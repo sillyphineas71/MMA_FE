@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { apiGet, apiPatch } from "../../config/api"; // dùng apiPatch cho PATCH
 import { palette, spacing, radius, shadow } from "../../theme/theme";
 
-const ROLE_FILTERS = ["All roles", "Admin", "Owner", "Customer"];
+const ROLE_FILTERS = ["All roles", "Owner", "Customer"];
 const STATUS_FILTERS = ["All", "Active", "Banned"];
 
 export default function AdminUsersScreen() {
@@ -35,7 +35,7 @@ export default function AdminUsersScreen() {
         search,
       };
       const res = await apiGet("/api/admin/users", params);
-      // Normalize response: accept array or wrapped shapes
+      // Normalize response to list then filter out admin accounts
       const list = Array.isArray(res)
         ? res
         : Array.isArray(res?.data)
@@ -45,10 +45,17 @@ export default function AdminUsersScreen() {
         : Array.isArray(res?.results)
         ? res.results
         : [];
-      setUsers(list);
+      const filtered = list.filter((user) => {
+        const roles = Array.isArray(user.roles)
+          ? user.roles
+          : user.role
+          ? [user.role]
+          : [];
+        return !roles.includes("admin");
+      });
+      setUsers(filtered);
     } catch (e) {
       console.error("Fetch users error:", e.message);
-      // Hiển thị lỗi rõ ràng (401/403/Network) thay vì lặng im
       Alert.alert("Lỗi tải Users", e.message);
     } finally {
       setLoading(false);
@@ -59,16 +66,7 @@ export default function AdminUsersScreen() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Toggle ban/activate user
-  const handleToggleStatus = async (id, currentStatus) => {
-    const next = currentStatus === "banned" ? "active" : "banned";
-    try {
-      await apiPatch(`/api/admin/users/${id}/status`, { status: next });
-      await fetchUsers();
-    } catch (e) {
-      Alert.alert("Lỗi cập nhật trạng thái", e.message);
-    }
-  };
+  // Toggle ban/activate user (updates local list optimistically)
 
   const onRefresh = async () => {
     try {
@@ -78,6 +76,31 @@ export default function AdminUsersScreen() {
       setRefreshing(false);
     }
   };
+
+  const handleToggleStatus = async (userId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === "banned" ? "active" : "banned";
+
+      await apiPatch(`/api/admin/users/${userId}/status`, {
+        status: newStatus,
+      });
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, status: newStatus } : user
+        )
+      );
+
+      Alert.alert(
+        "Thành công",
+        `Người dùng đã được ${newStatus === "banned" ? "cấm" : "kích hoạt"}.`
+      );
+    } catch (error) {
+      console.error("Toggle status error:", error);
+      Alert.alert("Lỗi", "Không thể cập nhật trạng thái người dùng.");
+    }
+  };
+
   const Badge = ({ text, color = palette.primary }) => (
     <View
       style={[

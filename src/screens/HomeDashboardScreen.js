@@ -3,37 +3,45 @@ import {
   View,
   Text,
   TextInput,
-  Image,
   TouchableOpacity,
   ScrollView,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { palette, radius, spacing, shadow } from "../theme/theme";
+import { useAuth } from "../context/AuthContext"; //  lấy user từ context
 
 export default function HomeDashboardScreen({ navigation }) {
+  const { user } = useAuth(); //  truy cập user đăng nhập
+
   return (
-    <View style={{ flex: 1, backgroundColor: palette.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ padding: spacing.lg, paddingBottom: 100 }}
       >
         {/* Header */}
         <View style={styles.header}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Image
-              source={{
-                uri: "https://i.pravatar.cc/100",
-              }}
-              style={styles.avatar}
-            />
-            <View>
-              <Text style={styles.username}>Hey, Oliver Williams 👋</Text>
-            </View>
+          <View style={{ flexDirection: "column" }}>
+            <Text style={styles.username}>
+              Hey,{" "}
+              {user?.fullName ||
+                user?.name ||
+                user?.email?.split("@")[0] ||
+                "Player"}{" "}
+              👋
+            </Text>
+            <Text style={styles.subtitle}>Welcome back!</Text>
           </View>
+
           <TouchableOpacity activeOpacity={0.8}>
-            <Ionicons name="notifications-outline" size={26} color={palette.text} />
+            <Ionicons
+              name="notifications-outline"
+              size={26}
+              color={palette.text}
+            />
           </TouchableOpacity>
         </View>
 
@@ -41,7 +49,7 @@ export default function HomeDashboardScreen({ navigation }) {
         <View style={styles.searchContainer}>
           <Ionicons name="search-outline" size={20} color={palette.sub} />
           <TextInput
-            placeholder="Royal Grass UK"
+            placeholder="Tìm kiếm sân bóng..."
             placeholderTextColor={palette.sub}
             style={styles.searchInput}
           />
@@ -54,13 +62,15 @@ export default function HomeDashboardScreen({ navigation }) {
           end={{ x: 1, y: 1 }}
           style={styles.banner}
         >
-          <Image
-            source={{
-              uri: "https://cdn-icons-png.flaticon.com/512/861/861512.png", 
-            }}
-            style={styles.bannerImage}
+          <Ionicons
+            name="football"
+            size={80}
+            color="rgba(255,255,255,0.9)"
+            style={{ marginBottom: spacing.sm }}
           />
-          <Text style={styles.bannerText}>Book Venues With The Best Offers!</Text>
+          <Text style={styles.bannerText}>
+            Book Venues With The Best Offers!
+          </Text>
           <TouchableOpacity
             activeOpacity={0.8}
             style={styles.bookButton}
@@ -80,8 +90,16 @@ export default function HomeDashboardScreen({ navigation }) {
             { label: "Leaderboard", icon: "trophy-outline" },
             { label: "Offers", icon: "pricetags-outline" },
           ].map((item) => (
-            <TouchableOpacity key={item.label} style={styles.gridItem} activeOpacity={0.85}>
-              <Ionicons name={item.icon} size={28} color={palette.primaryDark} />
+            <TouchableOpacity
+              key={item.label}
+              style={styles.gridItem}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name={item.icon}
+                size={28}
+                color={palette.primaryDark}
+              />
               <Text style={styles.gridText}>{item.label}</Text>
             </TouchableOpacity>
           ))}
@@ -94,7 +112,7 @@ export default function HomeDashboardScreen({ navigation }) {
         <Ionicons name="football-outline" size={26} color={palette.sub} />
         <Ionicons name="menu-outline" size={26} color={palette.sub} />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -105,16 +123,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: spacing.lg,
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: spacing.md,
-  },
   username: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 22,
+    fontWeight: "800",
     color: palette.text,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: palette.sub,
+    marginTop: 2,
   },
   searchContainer: {
     flexDirection: "row",
@@ -137,11 +154,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     alignItems: "center",
     ...shadow.card,
-  },
-  bannerImage: {
-    width: 90,
-    height: 90,
-    marginBottom: spacing.md,
   },
   bannerText: {
     fontSize: 18,
