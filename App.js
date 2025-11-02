@@ -27,7 +27,6 @@ import OwnerStack from "./src/navigation/OwnerStack";
 import HomeScreen from "./src/screens/HomeScreen";
 import VenueDetailScreen from "./src/screens/VenueDetailScreen";
 import SlotSelectionScreen from "./src/screens/SlotSelectionScreen";
-import OwnerCalendarScreen from "./src/screens/OwnerCalendarScreen";
 import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
 import OwnerVenueListScreen from "./src/screens/OwnerVenueListScreen";
 import OwnerVenueCreateScreen from "./src/screens/OwnerVenueCreateScreen";
@@ -36,6 +35,10 @@ import OwnerSubPitchListScreen from "./src/screens/OwnerSubPitchListScreen";
 import OwnerSubPitchCreateScreen from "./src/screens/OwnerSubPitchCreateScreen";
 import OwnerSubPitchEditScreen from "./src/screens/OwnerSubPitchEditScreen";
 import OwnerReviewListScreen from "./src/screens/OwnerReviewListScreen";
+
+// 💳 Payment Screens
+import PaymentSuccessScreen from "./src/screens/PaymentSuccessScreen";
+import PaymentFailScreen from "./src/screens/PaymentFailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -102,6 +105,17 @@ function AppStack() {
           headerRight: SignOutButton,
         }}
       />
+      {/* Payment result screens (for deep links/redirects) */}
+      <Stack.Screen
+        name="PaymentSuccess"
+        component={PaymentSuccessScreen}
+        options={{ headerShown: true, title: "Thanh toán thành công" }}
+      />
+      <Stack.Screen
+        name="PaymentFail"
+        component={PaymentFailScreen}
+        options={{ headerShown: true, title: "Thanh toán thất bại" }}
+      />
     </Stack.Navigator>
   );
 }
@@ -109,7 +123,30 @@ function AppStack() {
 function RootNavigator() {
   const { user } = useAuth();
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      linking={{
+        // Deep link prefixes for dev; adjust IPs as needed in your LAN
+        prefixes: [
+          "exp://192.168.1.13:8081/--",
+          "exp://192.168.1.13:19000/--",
+          "http://192.168.1.13:8081",
+          "http://192.168.1.13:8081/#",
+          "http://localhost:8081",
+          "http://localhost:8081/#",
+        ],
+        config: {
+          screens: {
+            Login: "login",
+            Register: "register",
+            Home: "home",
+            VenueDetail: "venue/:id",
+            SlotSelection: "slot/:id",
+            PaymentSuccess: "payment-success",
+            PaymentFail: "payment-fail",
+          },
+        },
+      }}
+    >
       {user ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );

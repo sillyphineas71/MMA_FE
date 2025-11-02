@@ -18,7 +18,7 @@ function resolveBaseURL() {
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
 
-  // Fallback to your LAN IP if detection fails (keep dev branch IP)
+  // Fallback to LAN IP if detection fails (adjust to your PC if needed)
   return "http://192.168.1.13:9999";
 }
 
