@@ -60,11 +60,11 @@ export default function VenueDetailScreen({ route, navigation }) {
         <Text>Đang tải thông tin sân...</Text>
       </View>
     );
-
+  const allInactive = subPitches.length > 0 && subPitches.every((s) => !s.active);
   return (
   <ScrollView style={{ backgroundColor: palette.bg }}>
     {/*  Hình ảnh (chỉ lấy ảnh từ subPitches) */}
-<View style={styles.imageContainer}>
+  <View style={styles.imageContainer}>
   <ScrollView
     horizontal
     pagingEnabled
@@ -127,65 +127,71 @@ export default function VenueDetailScreen({ route, navigation }) {
         <Text style={styles.title}>{venue.name}</Text>
         <Text style={styles.address}>{venue.address}</Text>
 
-        {/*  Nút đặt sân */}
+        {/* Nút đặt sân */}
         <GradientButton
-  title="Đặt sân ngay"
-  onPress={() => {
-    if (subPitches.length > 0) {
-      const firstSub = subPitches[0];
-      console.log("📸 Navigate with:", {
-        id: firstSub._id,
-        images: firstSub.images,
-      });
+          title="Đặt sân ngay"
+          disabled={allInactive}
+          onPress={() => {
+            // không cho book
+            if (allInactive) {
+              Alert.alert("Thông báo", "Tất cả sân con hiện đang ngừng hoạt động ❌");
+              return;
+            }
 
-      //  truyền ảnh đúng (ưu tiên subPitch, fallback về venue)
-      navigation.navigate("SlotSelection", {
-        id: firstSub._id,
-        images:
-          Array.isArray(firstSub.images) && firstSub.images.length > 0
-            ? firstSub.images
-            : Array.isArray(venue.images)
-            ? venue.images
-            : [],
-      });
-    } else {
-      alert("Chưa có sân con để đặt!");
-    }
-  }}
-  style={{ marginVertical: 16 }}
-/>
+            // tìm sân con đầu tiên còn active
+            const firstActive = subPitches.find((s) => s.active);
+            if (!firstActive) {
+              Alert.alert("Thông báo", "Không tìm thấy sân con đang hoạt động!");
+              return;
+            }
 
+            navigation.navigate("SlotSelection", {
+              id: firstActive._id,
+              images:
+                Array.isArray(firstActive.images) && firstActive.images.length > 0
+                  ? firstActive.images
+                  : Array.isArray(venue.images)
+                  ? venue.images
+                  : [],
+            });
+          }}
+          style={{
+            marginVertical: 16,
+            opacity: allInactive ? 0.5 : 1,
+          }}
+        />
 
-
-
-        {/* 🏟️ Danh sách sân con */}
+        {/* Danh sách sân con */}
         <Text style={styles.sectionTitle}>Danh sách sân con</Text>
         {subPitches.length === 0 ? (
           <Text style={styles.noReview}>Chưa có sân con nào</Text>
         ) : (
           subPitches.map((s) => (
-            <TouchableOpacity
-              key={s._id}
-              style={styles.subCard}
-              onPress={() => navigation.navigate("SlotSelection", { id: s._id,
-              images: s.images || venue.images || [], })} // 
-            >
+            <View key={s._id} style={styles.subCard}>
               <Text style={styles.subName}>{s.name}</Text>
               <Text>Loại sân: {s.type}</Text>
-              <Text>
-                Trạng thái: {s.active ? "Đang hoạt động ✅" : "Ngừng hoạt động ❌"}
+              <Text
+                style={{
+                  fontWeight: "600",
+                  color: s.active ? "green" : "red",
+                }}
+              >
+                {s.active ? "Đang hoạt động " : "Ngừng hoạt động "}
               </Text>
 
               <Text style={{ fontWeight: "600", marginTop: 6 }}>
                 Khung giờ đặt được:
               </Text>
+
               {s.bookableBlocks.map((b) => (
                 <Text key={b.label}>
-                  ⏰ {b.start} - {b.end} — {s.blockPrices[`${b.start}-${b.end}`]}đ
+                  ⏰ {b.start} - {b.end} —{" "}
+                  {s.blockPrices?.[`${b.start}-${b.end}`]
+                    ? `${s.blockPrices[`${b.start}-${b.end}`]}đ`
+                    : "Chưa có giá"}
                 </Text>
-
               ))}
-            </TouchableOpacity>
+            </View>
           ))
         )}
 
