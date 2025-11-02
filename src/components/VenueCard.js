@@ -87,7 +87,7 @@ export default function VenueCard({ venue, onPress }) {
         <Text style={styles.price}>
           💸{" "}
           {venue.minPrice
-            ? `${venue.minPrice} – ${venue.maxPrice} VND/h`
+            ? `${venue.minPrice} – ${venue.maxPrice} VND/Slot`
             : "Chưa có giá"}
         </Text>
       </TouchableOpacity>
