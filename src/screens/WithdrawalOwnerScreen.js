@@ -97,7 +97,7 @@ function WithdrawalModal({ visible, onClose, availableBalance, onComplete }) {
       setLoading(false);
     }
   };
-  
+
   const resetForm = () => {
     setAmount("");
     setAccountName("");
@@ -126,8 +126,10 @@ function WithdrawalModal({ visible, onClose, availableBalance, onComplete }) {
                 <Feather name="x" size={24} color={palette.sub} />
               </TouchableOpacity>
             </View>
-            
-            <Text style={styles.label}>Số tiền (Khả dụng: {formatCurrency(availableBalance)})</Text>
+
+            <Text style={styles.label}>
+              Số tiền (Khả dụng: {formatCurrency(availableBalance)})
+            </Text>
             <TextInput
               style={styles.input}
               placeholder="Nhập số tiền"
@@ -135,7 +137,7 @@ function WithdrawalModal({ visible, onClose, availableBalance, onComplete }) {
               value={amount}
               onChangeText={setAmount}
             />
-            
+
             {/* === PHẦN CODE BỊ THIẾU ĐƯỢC THÊM LẠI === */}
             <Text style={styles.label}>Tên chủ tài khoản</Text>
             <TextInput
@@ -145,7 +147,7 @@ function WithdrawalModal({ visible, onClose, availableBalance, onComplete }) {
               value={accountName}
               onChangeText={setAccountName}
             />
-            
+
             <Text style={styles.label}>Số tài khoản</Text>
             <TextInput
               style={styles.input}
@@ -190,11 +192,17 @@ export default function WithdrawalOwnerScreen() {
     try {
       // Dùng Promise.all để tải song song
       const [balanceData, historyData] = await Promise.all([
-         apiGet("/api/withdrawals/owner/balance"),
-         apiGet("/api/withdrawals/owner/history")
+        apiGet("/api/withdrawals/owner/balance"),
+        apiGet("/api/withdrawals/owner/history"),
       ]);
       setBalance(balanceData);
-      setHistory(historyData);
+      // Hỗ trợ cả 2 kiểu response: mảng thuần hoặc { data: [] }
+      const normalizedHistory = Array.isArray(historyData?.data)
+        ? historyData.data
+        : Array.isArray(historyData)
+        ? historyData
+        : [];
+      setHistory(normalizedHistory);
     } catch (e) {
       Alert.alert("Lỗi", e.message);
     } finally {
@@ -215,12 +223,12 @@ export default function WithdrawalOwnerScreen() {
     setRefreshing(true);
     fetchData();
   };
-  
+
   const getStatusStyle = (status) => {
-    if (status === 'success') return { color: 'green', text: 'Thành công' };
-    if (status === 'rejected') return { color: 'red', text: 'Bị từ chối' };
-    if (status === 'processing') return { color: 'blue', text: 'Đang xử lý' };
-    return { color: palette.sub, text: 'Đang chờ' };
+    if (status === "success") return { color: "green", text: "Thành công" };
+    if (status === "rejected") return { color: "red", text: "Bị từ chối" };
+    if (status === "processing") return { color: "blue", text: "Đang xử lý" };
+    return { color: palette.sub, text: "Đang chờ" };
   };
 
   const renderHistoryItem = ({ item }) => {
@@ -232,7 +240,9 @@ export default function WithdrawalOwnerScreen() {
           <View>
             <Text style={styles.itemBank}>{item.bankInfo.bankName}</Text>
             {/* Dòng mới hiển thị số tài khoản */}
-            <Text style={styles.itemAccount}>{item.bankInfo.accountNumber}</Text>
+            <Text style={styles.itemAccount}>
+              {item.bankInfo.accountNumber}
+            </Text>
           </View>
           {/* === KẾT THÚC THAY ĐỔI 2 === */}
           <Text style={styles.itemAmount}>{formatCurrency(item.amount)}</Text>
@@ -245,7 +255,7 @@ export default function WithdrawalOwnerScreen() {
             {status.text}
           </Text>
         </View>
-         {item.status === 'rejected' && (
+        {item.status === "rejected" && (
           <Text style={styles.itemReason}>Lý do: {item.rejectionReason}</Text>
         )}
       </View>
@@ -279,7 +289,11 @@ export default function WithdrawalOwnerScreen() {
           <Text style={styles.emptyText}>Chưa có lịch sử rút tiền.</Text>
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[palette.primary]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[palette.primary]}
+          />
         }
         contentContainerStyle={{ padding: spacing.lg }}
       />
@@ -329,7 +343,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: palette.border
+    borderColor: palette.border,
   },
   itemRow: {
     flexDirection: "row",
@@ -340,8 +354,8 @@ const styles = StyleSheet.create({
   itemAmount: { fontSize: 16, fontWeight: "700", color: palette.text },
   itemDate: { color: palette.sub },
   itemStatus: { fontWeight: "700" },
-  itemReason: { color: 'red', fontStyle: 'italic', marginTop: spacing.xs },
-  emptyText: { color: palette.sub, textAlign: 'center', marginTop: spacing.lg },
+  itemReason: { color: "red", fontStyle: "italic", marginTop: spacing.xs },
+  emptyText: { color: palette.sub, textAlign: "center", marginTop: spacing.lg },
   // Modal Styles
   modalBackdrop: {
     flex: 1,
@@ -350,7 +364,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: palette.card,
-    maxHeight: '85%', // Giới hạn chiều cao modal
+    maxHeight: "85%", // Giới hạn chiều cao modal
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     borderTopLeftRadius: radius.xl,
@@ -386,8 +400,8 @@ const styles = StyleSheet.create({
   itemAmount: { fontSize: 16, fontWeight: "700", color: palette.text },
   itemDate: { color: palette.sub },
   itemStatus: { fontWeight: "700" },
-  itemReason: { color: 'red', fontStyle: 'italic', marginTop: spacing.xs },
-  emptyText: { color: palette.sub, textAlign: 'center', marginTop: spacing.lg },
+  itemReason: { color: "red", fontStyle: "italic", marginTop: spacing.xs },
+  emptyText: { color: palette.sub, textAlign: "center", marginTop: spacing.lg },
   // Modal Styles
   modalBackdrop: {
     flex: 1,
@@ -396,7 +410,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     backgroundColor: palette.card,
-    maxHeight: '85%', // Giới hạn chiều cao modal
+    maxHeight: "85%", // Giới hạn chiều cao modal
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.lg,
     borderTopLeftRadius: radius.xl,

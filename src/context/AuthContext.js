@@ -9,35 +9,163 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Tải token và user từ storage khi mở app
-    const bootstrapAsync = async () => {
-      let userToken, userData;
+  // Helper: decode JWT payload safely (no external deps)
+  const decodeJwt = (jwt) => {
+    try {
+      const base64Url = jwt.split(".")[1] || "";
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+      let decoded = null;
       try {
-        userToken = await AsyncStorage.getItem("userToken");
-        userData = await AsyncStorage.getItem("user");
-        if (userToken && userData) {
-          setToken(userToken);
-          setUser(JSON.parse(userData));
+        if (typeof Buffer !== "undefined" && Buffer.from) {
+          decoded = Buffer.from(padded, "base64").toString("utf8");
+        }
+      } catch (_) {}
+      if (!decoded) {
+        if (
+          typeof global !== "undefined" &&
+          typeof global.atob === "function"
+        ) {
+          decoded = decodeURIComponent(
+            global
+              .atob(padded)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+        } else if (typeof atob === "function") {
+          decoded = decodeURIComponent(
+            atob(padded)
+              .split("")
+              .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+              .join("")
+          );
+        }
+      }
+      return decoded ? JSON.parse(decoded) : null;
+    } catch (e) {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    // Tải token và user từ storage khi mở app và kiểm tra hạn token
+    const bootstrapAsync = async () => {
+      try {
+        const userToken = await AsyncStorage.getItem("userToken");
+        const userData = await AsyncStorage.getItem("user");
+        if (userToken) {
+          const payload = decodeJwt(userToken);
+          const now = Date.now();
+          const expMs = payload?.exp ? payload.exp * 1000 : null;
+          if (expMs && expMs < now) {
+            // Token hết hạn → xoá và yêu cầu đăng nhập lại
+            await AsyncStorage.removeItem("userToken");
+            await AsyncStorage.removeItem("user");
+          } else if (userData) {
+            setToken(userToken);
+            setUser(JSON.parse(userData));
+          }
         }
       } catch (e) {
         console.error("Lỗi phục hồi token", e);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     bootstrapAsync();
   }, []);
 
   const authContext = {
+    // signIn can accept either a token string or an object { token, user }
     signIn: async (data) => {
-      // GIẢ ĐỊNH: data = { token: "...", user: { role: "admin", ... } }
       try {
-        const { token, user } = data;
+        let token;
+        let userObj = null;
+
+        if (typeof data === "string") {
+          token = data;
+        } else if (data && typeof data === "object") {
+          token = data.token;
+          userObj = data.user || null;
+        }
+
+        if (!token) throw new Error("Missing token");
+
+        // If user not provided, try to decode token payload
+        if (!userObj) {
+          try {
+            const base64Url = token.split(".")[1] || "";
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            // pad base64 string
+            const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+
+            let decoded = null;
+            // try Buffer (node/react-native with buffer polyfill)
+            try {
+              if (typeof Buffer !== "undefined" && Buffer.from) {
+                decoded = Buffer.from(padded, "base64").toString("binary");
+              }
+            } catch (ee) {
+              decoded = null;
+            }
+
+            // fallback to global atob if available
+            if (!decoded) {
+              if (
+                typeof global !== "undefined" &&
+                typeof global.atob === "function"
+              ) {
+                decoded = global.atob(padded);
+              } else if (typeof atob === "function") {
+                decoded = atob(padded);
+              }
+            }
+
+            if (!decoded) throw new Error("No base64 decoder available");
+
+            const jsonPayload = decodeURIComponent(
+              decoded
+                .split("")
+                .map(function (c) {
+                  return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+                })
+                .join("")
+            );
+
+            const payload = JSON.parse(jsonPayload);
+            userObj = {
+              id: payload.sub,
+              email: payload.email,
+              roles: payload.roles || [],
+            };
+            // derive single role for UI convenience (admin > owner > customer)
+            if (Array.isArray(userObj.roles) && userObj.roles.includes("admin"))
+              userObj.role = "admin";
+            else if (
+              Array.isArray(userObj.roles) &&
+              userObj.roles.includes("owner")
+            )
+              userObj.role = "owner";
+            else if (
+              Array.isArray(userObj.roles) &&
+              userObj.roles.includes("customer")
+            )
+              userObj.role = "customer";
+            else
+              userObj.role =
+                (Array.isArray(userObj.roles) && userObj.roles[0]) || null;
+          } catch (e) {
+            console.warn("Không thể decode token để lấy user payload", e);
+          }
+        }
+
         await AsyncStorage.setItem("userToken", token);
-        await AsyncStorage.setItem("user", JSON.stringify(user));
+        if (userObj)
+          await AsyncStorage.setItem("user", JSON.stringify(userObj));
         setToken(token);
-        setUser(user);
+        setUser(userObj);
       } catch (e) {
         console.error("Lỗi lưu trữ đăng nhập", e);
         throw new Error("Không thể lưu thông tin đăng nhập");
