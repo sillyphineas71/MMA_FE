@@ -133,3 +133,4 @@ const styles = StyleSheet.create({
   address: { color: palette.sub, marginVertical: 4 },
   price: { color: palette.primaryDark, fontWeight: "600" },
 });
+// End of VenueCard.js

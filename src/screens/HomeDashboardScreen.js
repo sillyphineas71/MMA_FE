@@ -7,14 +7,22 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { palette, radius, spacing, shadow } from "../theme/theme";
 import { useAuth } from "../context/AuthContext"; //  lấy user từ context
 
 export default function HomeDashboardScreen({ navigation }) {
-  const { user } = useAuth(); //  truy cập user đăng nhập
+  const { user, signOut } = useAuth(); //  truy cập user đăng nhập
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(); //  Context tự reset về Login
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
@@ -31,18 +39,26 @@ export default function HomeDashboardScreen({ navigation }) {
                 user?.name ||
                 user?.email?.split("@")[0] ||
                 "Player"}{" "}
-              👋
+              
             </Text>
             <Text style={styles.subtitle}>Welcome back!</Text>
           </View>
 
-          <TouchableOpacity activeOpacity={0.8}>
-            <Ionicons
-              name="notifications-outline"
-              size={26}
-              color={palette.text}
-            />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {/* Nút thông báo */}
+            <TouchableOpacity activeOpacity={0.8} style={{ marginRight: 15 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={26}
+                color={palette.text}
+              />
+            </TouchableOpacity>
+
+            {/*  Nút Logout */}
+            <TouchableOpacity onPress={handleSignOut} activeOpacity={0.8}>
+              <Feather name="log-out" size={22} color={palette.primaryDark} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search Bar */}
@@ -83,12 +99,10 @@ export default function HomeDashboardScreen({ navigation }) {
         {/* Grid buttons */}
         <View style={styles.grid}>
           {[
-            { label: "My Calendar", icon: "calendar-outline" },
-            { label: "Create Activity", icon: "add-circle-outline" },
-            { label: "Quick Book", icon: "flash-outline" },
-            { label: "Favourite Venues", icon: "heart-outline" },
-            { label: "Leaderboard", icon: "trophy-outline" },
-            { label: "Offers", icon: "pricetags-outline" },
+            { label: "My Profile", icon: "calendar-outline" },
+            { label: "History Booking", icon: "add-circle-outline" },
+            { label: "About Us", icon: "flash-outline" },
+            { label: "Support", icon: "heart-outline" },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}
