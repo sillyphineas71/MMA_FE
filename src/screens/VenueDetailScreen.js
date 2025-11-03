@@ -8,14 +8,26 @@ import {
   TouchableOpacity,
   Alert,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { API_BASE } from "../config/api";
 import { palette, spacing } from "../theme/theme";
 import GradientButton from "../components/GradientButton";
 import ReviewCard from "../components/ReviewCard";
+// ✅ 1. IMPORT THƯ VIỆN GOOGLE AI
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+// ✅ 2. THÊM API KEY CỦA BẠN VÀO ĐÂY
+// ⚠️ CẢNH BÁO: CHỈ DÙNG ĐỂ TEST. KHÔNG BAO GIỜ ĐƯA LÊN PRODUCTION!
+// HÃY DÙNG BIẾN MÔI TRƯỜNG NẾU CÓ THỂ, HOẶC XÓA ĐI KHI BUILD APP
+const GEMINI_API_KEY = "YOUR_GOOGLE_AI_API_KEY_HERE";
+
+// ✅ 3. KHỞI TẠO DỊCH VỤ AI
+  const genAI = new GoogleGenerativeAI('AIzaSyDfdRw4gBPdOQFH8G7ZvHLsO3EApUQ5ERo');
+const aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
 
 export default function VenueDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -23,9 +35,11 @@ export default function VenueDetailScreen({ route, navigation }) {
   const [subPitches, setSubPitches] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [activeImage, setActiveImage] = useState(0);
-
-  // ✅ THÊM STATE MỚI: kiểm tra user đã đặt sân này chưa
   const [hasBooked, setHasBooked] = useState(false);
+
+  const [aiSummary, setAiSummary] = useState(null);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -60,7 +74,7 @@ export default function VenueDetailScreen({ route, navigation }) {
           setReviews([]);
         }
 
-        // ✅ 4) KIỂM TRA USER ĐÃ TỪNG ĐẶT SÂN NÀY CHƯA
+        // 4) KIỂM TRA USER ĐÃ TỪNG ĐẶT SÂN NÀY CHƯA
         try {
           const resCheck = await fetch(
             `${API_BASE}/api/bookings/user/completed?venueId=${id}`
@@ -88,17 +102,59 @@ export default function VenueDetailScreen({ route, navigation }) {
     fetchData();
   }, [id]);
 
+  // ✅ 4. SỬA ĐỔI EFFECT NÀY ĐỂ GỌI TRỰC TIẾP GEMINI AI
+  useEffect(() => {
+    // Hàm này giờ sẽ gọi thẳng đến Google AI
+    async function fetchAiSummary() {
+      if (reviews.length === 0) {
+        setAiSummary(null);
+        return;
+      }
+
+      setIsSummaryLoading(true);
+      setSummaryError(null);
+      try {
+        // Gom tất cả comment của review thành một chuỗi
+        const reviewComments = reviews
+          .map((r) => `- ${r.comment} (Rating: ${r.rating} sao)`)
+          .join("\n");
+
+        // Tạo prompt cho AI
+        const prompt = `
+          Bạn là trợ lý đánh giá sân bóng. Dưới đây là một số đánh giá từ người dùng:
+          ${reviewComments}
+          
+          Hãy tóm tắt các đánh giá này thành một đoạn văn ngắn gọn (tối đa 3 câu),
+          nêu bật những điểm chung mà người dùng thích và không thích về sân bóng này.
+          Viết bằng tiếng Việt.
+        `;
+
+        // Gọi API của Gemini
+        const result = await aiModel.generateContent(prompt);
+        const response = await result.response;
+        const summaryText = response.text();
+
+        setAiSummary(summaryText);
+      } catch (err) {
+        console.error("Lỗi khi gọi Gemini AI:", err);
+        setSummaryError("Không thể tải tóm tắt. Vui lòng thử lại sau.");
+      } finally {
+        setIsSummaryLoading(false);
+      }
+    }
+
+    fetchAiSummary();
+  }, [reviews]); 
+
   if (!venue)
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <Text>Đang tải thông tin sân...</Text>
       </View>
     );
-  // Tính trạng thái toàn bộ sân con có đang ngừng hoạt động hay không
+
   const allInactive =
     subPitches.length > 0 && subPitches.every((s) => !s.active);
-
-  // Ảnh cho carousel: gom ảnh từ tất cả sub-pitches
   const subPitchImages = subPitches.flatMap((sp) =>
     Array.isArray(sp.images) ? sp.images : []
   );
@@ -258,7 +314,7 @@ export default function VenueDetailScreen({ route, navigation }) {
           ))
         )}
 
-        {/* ✅ CHỈ HIỂN THỊ NÚT GỬI ĐÁNH GIÁ NẾU USER ĐÃ ĐẶT */}
+        {/* NÚT GỬI ĐÁNH GIÁ */}
         {hasBooked && (
           <TouchableOpacity
             style={styles.feedbackBtn}
@@ -301,6 +357,24 @@ export default function VenueDetailScreen({ route, navigation }) {
 
         {/* Reviews */}
         <Text style={styles.sectionTitle}>Đánh giá</Text>
+
+        {/* PHẦN TÓM TẮT BẰNG AI (Không thay đổi) */}
+        {reviews.length > 0 && (
+          <View style={styles.aiSummaryContainer}>
+            <View style={styles.aiHeader}>
+              <Ionicons name="sparkles-sharp" size={20} color={palette.primary} />
+              <Text style={styles.aiTitle}>Tóm tắt bằng AI</Text>
+            </View>
+            {isSummaryLoading ? (
+              <ActivityIndicator size="small" color={palette.primary} />
+            ) : summaryError ? (
+              <Text style={styles.aiError}>{summaryError}</Text>
+            ) : aiSummary ? (
+              <Text style={styles.aiText}>{aiSummary}</Text>
+            ) : null}
+          </View>
+        )}
+
         {reviews.length === 0 ? (
           <Text style={styles.noReview}>Chưa có đánh giá nào</Text>
         ) : (
@@ -311,6 +385,7 @@ export default function VenueDetailScreen({ route, navigation }) {
   );
 }
 
+// ... (Phần styles giữ nguyên y hệt)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: palette.bg },
   content: { padding: spacing.lg },
@@ -371,7 +446,6 @@ const styles = StyleSheet.create({
     marginHorizontal: 3,
   },
 
-  // ✅ STYLE NÚT GỬI ĐÁNH GIÁ
   feedbackBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -385,5 +459,35 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "700",
     marginLeft: 6,
+  },
+
+  aiSummaryContainer: {
+    backgroundColor: "#f0f5ff",
+    borderRadius: 10,
+    padding: 14,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: "#d6e4ff",
+  },
+  aiHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  aiTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: palette.primary,
+    marginLeft: 6,
+  },
+  aiText: {
+    fontSize: 14,
+    color: palette.text,
+    lineHeight: 20,
+  },
+  aiError: {
+    fontSize: 14,
+    color: "red",
+    fontStyle: "italic",
   },
 });
