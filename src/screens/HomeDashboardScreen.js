@@ -219,12 +219,12 @@ export default function HomeDashboardScreen({ navigation }) {
             {
               label: "About Us",
               icon: "information-circle-outline",
-              screen: "About",
+              screen: "AboutUs",
             },
             {
               label: "Support",
               icon: "help-circle-outline",
-              screen: "Support",
+              screen: "ContactUs",
             },
           ].map((item) => (
             <TouchableOpacity

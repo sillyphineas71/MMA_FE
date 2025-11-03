@@ -36,6 +36,9 @@ import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
 import PaymentSuccessScreen from "./src/screens/PaymentSuccessScreen";
 import PaymentFailScreen from "./src/screens/PaymentFailScreen";
 import HistoryBookingScreen from "./src/screens/HistoryBookingScreen";
+import ProfileScreen from "./src/screens/ProfileScreen";
+import AboutUsScreen from "./src/screens/AboutUsScreen";
+import ContactUsScreen from "./src/screens/ContactUsScreen";
 
 // NEW: Import FeedbackScreen
 import FeedbackScreen from "./src/screens/FeedbackScreen";
@@ -90,6 +93,33 @@ function AppStack() {
       screenOptions={{ headerShown: false, animation: "slide_from_right" }}
     >
       <Stack.Screen name="HomeDashboard" component={HomeDashboardScreen} />
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          headerShown: true,
+          title: "Hồ sơ",
+          headerRight: SignOutButton,
+        }}
+      />
+      <Stack.Screen
+        name="AboutUs"
+        component={AboutUsScreen}
+        options={{
+          headerShown: true,
+          title: "About Us",
+          headerRight: SignOutButton,
+        }}
+      />
+      <Stack.Screen
+        name="ContactUs"
+        component={ContactUsScreen}
+        options={{
+          headerShown: true,
+          title: "Liên hệ",
+          headerRight: SignOutButton,
+        }}
+      />
       <Stack.Screen
         name="Home"
         component={HomeScreen}
