@@ -14,6 +14,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import * as Linking from "expo-linking";
 import { API_BASE, apiPost, apiGet } from "../config/api";
 import { palette, spacing, radius } from "../theme/theme";
+import { useAuth } from "../context/AuthContext";
 
 export default function SlotSelectionScreen({ route, navigation }) {
   const { id } = route.params; // subPitchId
@@ -23,6 +24,7 @@ export default function SlotSelectionScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [currentHoldId, setCurrentHoldId] = useState(null);
+  const { user } = useAuth();
 
   const formattedDate = date.toLocaleDateString("en-CA"); // YYYY-MM-DD
 
@@ -226,13 +228,14 @@ if (status === "hold" && paymentResult === "pending") {
 
 
 
-  // ⚡ Giữ slot (màu vàng)
+  //  Giữ slot (màu vàng)
   const holdSlot = async (slot) => {
     try {
       const res = await apiPost("/api/holds", {
         subPitchId: id,
         date: formattedDate,
         slotIndex: slot.slotIndex,
+        userId: user?._id,
       });
 
       const holdId = res.hold?._id;
@@ -249,7 +252,7 @@ if (status === "hold" && paymentResult === "pending") {
     }
   };
 
-  // 💳 Thanh toán VNPay
+  //  Thanh toán VNPay
   const payForSlot = async () => {
     try {
       if (!currentHoldId) {
@@ -292,7 +295,7 @@ if (status === "hold" && paymentResult === "pending") {
       
       <Text style={styles.title}>Chọn ngày đặt sân</Text>
 
-      {/* 🗓️ Chọn ngày */}
+      {/*  Chọn ngày */}
       <TouchableOpacity style={styles.dateButton} onPress={() => setShowPicker(true)}>
         <Text style={styles.dateText}>📅 {formattedDate}</Text>
       </TouchableOpacity>
@@ -357,7 +360,7 @@ if (status === "hold" && paymentResult === "pending") {
         </View>
       )}
 
-      {/* 💳 Nút thanh toán khi có pending */}
+      {/*  Nút thanh toán khi có pending */}
       {selectedSlot &&
   selectedSlot.status === "hold" &&
   selectedSlot.paymentResult !== "success" &&
@@ -376,7 +379,7 @@ if (status === "hold" && paymentResult === "pending") {
   );
 }
 
-// 🎨 Styles
+//  Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
