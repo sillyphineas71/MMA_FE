@@ -35,6 +35,10 @@ import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
 // Payment Screens
 import PaymentSuccessScreen from "./src/screens/PaymentSuccessScreen";
 import PaymentFailScreen from "./src/screens/PaymentFailScreen";
+import HistoryBookingScreen from "./src/screens/HistoryBookingScreen";
+
+// NEW: Import FeedbackScreen
+import FeedbackScreen from "./src/screens/FeedbackScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -55,20 +59,19 @@ function AuthStack() {
   );
 }
 
-// 🔹 APP STACK (sau khi login thành công)
-
+// APP STACK (sau khi login thành công)
 function AppStack() {
   const { user, signOut } = useAuth();
-  const navigation = useNavigation(); //  lấy navigation để reset stack
+  const navigation = useNavigation();
 
   //  Đăng xuất và reset toàn bộ navigation về Login
   const handleSignOut = async () => {
-  try {
-    await signOut(); // chỉ cần signOut, RootNavigator tự về Login
-  } catch (err) {
-    console.error("SignOut error:", err);
-  }
-};
+    try {
+      await signOut();
+    } catch (err) {
+      console.error("SignOut error:", err);
+    }
+  };
 
 
   const SignOutButton = () => (
@@ -94,6 +97,15 @@ function AppStack() {
         options={{
           headerShown: true,
           title: "Danh sách sân",
+          headerRight: SignOutButton,
+        }}
+      />
+      <Stack.Screen
+        name="BookingHistory"
+        component={HistoryBookingScreen}
+        options={{
+          headerShown: true,
+          title: "Lịch sử Booking",
           headerRight: SignOutButton,
         }}
       />
@@ -131,6 +143,18 @@ function AppStack() {
           title: "Thanh toán thất bại",
         }}
       />
+
+      {/* NEW: Feedback Screen */}
+      <Stack.Screen
+        name="Feedback"
+        component={FeedbackScreen}
+        options={{
+          headerShown: true,
+          title: "Đánh giá sân",
+          headerRight: SignOutButton,
+        }}
+      />
+      {/* ==================================== */}
     </Stack.Navigator>
   );
 }
@@ -161,6 +185,7 @@ function RootNavigator() {
             SlotSelection: "slot/:id",
             PaymentSuccess: "payment-success",
             PaymentFail: "payment-fail",
+            Feedback: "feedback/:bookingId", // Optional: deep link
           },
         },
       }}

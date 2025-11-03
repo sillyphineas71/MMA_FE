@@ -23,7 +23,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 // ✅ 2. THÊM API KEY CỦA BẠN VÀO ĐÂY
 // ⚠️ CẢNH BÁO: CHỈ DÙNG ĐỂ TEST. KHÔNG BAO GIỜ ĐƯA LÊN PRODUCTION!
 // HÃY DÙNG BIẾN MÔI TRƯỜNG NẾU CÓ THỂ, HOẶC XÓA ĐI KHI BUILD APP
-const GEMINI_API_KEY = "YOUR_GOOGLE_AI_API_KEY_HERE";
+const GEMINI_API_KEY = "AIzaSyDfdRw4gBPdOQFH8G7ZvHLsO3EApUQ5ERo";
 
 // ✅ 3. KHỞI TẠO DỊCH VỤ AI
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
@@ -176,7 +176,7 @@ export default function VenueDetailScreen({ route, navigation }) {
           onScroll={(e) => {
             const index = Math.round(
               e.nativeEvent.contentOffset.x /
-                e.nativeEvent.layoutMeasurement.width
+              e.nativeEvent.layoutMeasurement.width
             );
             setActiveImage(index);
           }}
@@ -264,11 +264,11 @@ export default function VenueDetailScreen({ route, navigation }) {
               id: firstActive._id,
               images:
                 Array.isArray(firstActive.images) &&
-                firstActive.images.length > 0
+                  firstActive.images.length > 0
                   ? firstActive.images
                   : Array.isArray(venue.images)
-                  ? venue.images
-                  : [],
+                    ? venue.images
+                    : [],
             });
           }}
           style={{ marginVertical: 16, opacity: allInactive ? 0.5 : 1 }}
