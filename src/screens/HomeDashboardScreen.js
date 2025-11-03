@@ -210,14 +210,22 @@ export default function HomeDashboardScreen({ navigation }) {
         {/* Grid buttons */}
         <View style={styles.grid}>
           {[
-            // { label: "My Profile", icon: "person-outline", screen: "Profile" },
+            { label: "My Profile", icon: "person-outline", screen: "Profile" },
             {
               label: "History Booking",
               icon: "time-outline",
               screen: "BookingHistory",
             },
-            // { label: "About Us", icon: "information-circle-outline", screen: "About" },
-            // { label: "Support", icon: "help-circle-outline", screen: "Support" },
+            {
+              label: "About Us",
+              icon: "information-circle-outline",
+              screen: "About",
+            },
+            {
+              label: "Support",
+              icon: "help-circle-outline",
+              screen: "Support",
+            },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}

@@ -73,7 +73,6 @@ function AppStack() {
     }
   };
 
-
   const SignOutButton = () => (
     <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
       <Feather name="log-out" size={20} color={palette.primaryDark} />
@@ -159,7 +158,6 @@ function AppStack() {
   );
 }
 
-
 //  ROOT NAVIGATOR (phân nhánh giữa Auth / App)
 
 function RootNavigator() {
@@ -169,10 +167,10 @@ function RootNavigator() {
     <NavigationContainer
       linking={{
         prefixes: [
-          "exp://192.168.1.13:8081/--",
-          "exp://192.168.1.13:19000/--",
-          "http://192.168.1.13:8081",
-          "http://192.168.1.13:8081/#",
+          "exp://192.168.5.102:8081/--",
+          "exp://192.168.5.102:19000/--",
+          "http://192.168.5.102:8081",
+          "http://192.168.5.102:8081/#",
           "http://localhost:8081",
           "http://localhost:8081/#",
         ],
@@ -194,7 +192,6 @@ function RootNavigator() {
     </NavigationContainer>
   );
 }
-
 
 // 🔹 APP ENTRY POINT
 
