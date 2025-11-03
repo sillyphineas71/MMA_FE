@@ -23,7 +23,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 // ✅ 2. THÊM API KEY CỦA BẠN VÀO ĐÂY
 // ⚠️ CẢNH BÁO: CHỈ DÙNG ĐỂ TEST. KHÔNG BAO GIỜ ĐƯA LÊN PRODUCTION!
 // HÃY DÙNG BIẾN MÔI TRƯỜNG NẾU CÓ THỂ, HOẶC XÓA ĐI KHI BUILD APP
-const GEMINI_API_KEY = "YOUR_GOOGLE_AI_API_KEY_HERE";
+const GEMINI_API_KEY = "AIzaSyDfdRw4gBPdOQFH8G7ZvHLsO3EApUQ5ERo";
 
 // ✅ 3. KHỞI TẠO DỊCH VỤ AI
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
