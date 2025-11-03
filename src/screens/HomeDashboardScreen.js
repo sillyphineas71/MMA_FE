@@ -210,10 +210,14 @@ export default function HomeDashboardScreen({ navigation }) {
         {/* Grid buttons */}
         <View style={styles.grid}>
           {[
-            { label: "My Profile", icon: "person-outline", screen: "Profile" },
-            { label: "History Booking", icon: "time-outline", screen: "BookingHistory" },
-            { label: "About Us", icon: "information-circle-outline", screen: "About" },
-            { label: "Support", icon: "help-circle-outline", screen: "Support" },
+            // { label: "My Profile", icon: "person-outline", screen: "Profile" },
+            {
+              label: "History Booking",
+              icon: "time-outline",
+              screen: "BookingHistory",
+            },
+            // { label: "About Us", icon: "information-circle-outline", screen: "About" },
+            // { label: "Support", icon: "help-circle-outline", screen: "Support" },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}
@@ -221,7 +225,11 @@ export default function HomeDashboardScreen({ navigation }) {
               activeOpacity={0.85}
               onPress={() => navigation.navigate(item.screen)} // ✅ chuyển sang screen tương ứng
             >
-              <Ionicons name={item.icon} size={28} color={palette.primaryDark} />
+              <Ionicons
+                name={item.icon}
+                size={28}
+                color={palette.primaryDark}
+              />
               <Text style={styles.gridText}>{item.label}</Text>
             </TouchableOpacity>
           ))}
