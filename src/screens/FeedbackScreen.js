@@ -12,21 +12,37 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker"; // ← CẬP NHẬT
-import { apiGet, apiPost } from "../../config/api";
-import { palette, spacing } from "../../theme/theme";
+import { apiGet, apiPost } from "../config/api";
+import { palette, spacing } from "../theme/theme";
 
 export default function FeedbackScreen({ route, navigation }) {
     const [rating, setRating] = useState(0);
     const [comment, setComment] = useState("");
     const [bookings, setBookings] = useState([]);
     const [selectedBooking, setSelectedBooking] = useState("");
+    const [bookingDetail, setBookingDetail] = useState(null); // NEW: Chi tiết booking
 
-    const { venueId, onReviewSubmitted } = route.params; // ← Nhận callback
+    // NEW: Nhận bookingId từ HistoryBookingScreen
+    const { bookingId, onReviewSubmitted } = route.params || {};
 
+    // NEW: Tải chi tiết booking theo bookingId
     useEffect(() => {
-        fetchBookings();
-    }, [venueId]);
+        if (bookingId) {
+            fetchBookingDetail();
+        }
+    }, [bookingId]);
 
+    const fetchBookingDetail = async () => {
+        try {
+            const res = await apiGet(`/api/bookings/${bookingId}`);
+            setBookingDetail(res.data);
+        } catch (error) {
+            console.error("Lỗi tải thông tin booking:", error);
+            Alert.alert("Lỗi", "Không thể tải thông tin lịch đặt.");
+        }
+    };
+
+    // KEEP: Giữ lại fetchBookings cũ (nếu cần dùng ở nơi khác)
     const fetchBookings = async () => {
         try {
             const res = await apiGet(`/api/bookings/user/completed?venueId=${venueId}`);
@@ -38,24 +54,25 @@ export default function FeedbackScreen({ route, navigation }) {
     };
 
     const handleSubmit = async () => {
-        if (!selectedBooking || rating < 1 || comment.trim().length < 10) {
-            return Alert.alert("Lỗi", "Vui lòng chọn lịch đặt, đánh giá sao và viết ít nhất 10 ký tự.");
+        if (!bookingId || rating < 1 || comment.trim().length < 10) {
+            return Alert.alert("Lỗi", "Vui lòng đánh giá sao và viết ít nhất 10 ký tự.");
         }
 
         try {
             await apiPost("/api/reviews/submit", {
-                bookingId: selectedBooking,
+                bookingId,
                 rating,
                 comment: comment.trim(),
             });
 
             Alert.alert("Thành công", "Đánh giá đã được gửi!", [
                 {
-                    text: "OK", onPress: () => {
-                        onReviewSubmitted?.(); // ← GỌI LẠI ĐỂ REFRESH VenueDetail
+                    text: "OK",
+                    onPress: () => {
+                        onReviewSubmitted?.(); // Gọi lại để refresh HistoryBookingScreen
                         navigation.goBack();
-                    }
-                }
+                    },
+                },
             ]);
         } catch (error) {
             const msg = error.response?.data?.error || "Không thể gửi đánh giá. Vui lòng thử lại.";
@@ -63,7 +80,7 @@ export default function FeedbackScreen({ route, navigation }) {
         }
     };
 
-    // Lấy thông tin booking đã chọn
+    // KEEP: Giữ lại selectedBk (dù không dùng Picker)
     const selectedBk = bookings.find(bk => bk._id === selectedBooking);
 
     return (
@@ -71,19 +88,21 @@ export default function FeedbackScreen({ route, navigation }) {
             <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
                 <Text style={styles.title}>Đánh giá sân bóng</Text>
 
-                {/* THÔNG TIN SÂN NHỎ */}
-                {selectedBk && (
+                {/* NEW: HIỂN THỊ THÔNG TIN BOOKING THEO bookingId */}
+                {bookingDetail && (
                     <View style={styles.infoBox}>
                         <Text style={styles.infoText}>
-                            <Text style={{ fontWeight: "700" }}>Sân:</Text> {selectedBk.subPitchId?.name || "N/A"}
+                            <Text style={{ fontWeight: "700" }}>Sân:</Text> {bookingDetail.subPitch?.name || "N/A"}
                         </Text>
                         <Text style={styles.infoText}>
-                            <Text style={{ fontWeight: "700" }}>Thời gian:</Text> {selectedBk.date} | {selectedBk.startTime} - {selectedBk.endTime}
+                            <Text style={{ fontWeight: "700" }}>Thời gian:</Text> {bookingDetail.date} | {bookingDetail.startTime} - {bookingDetail.endTime}
                         </Text>
                     </View>
                 )}
 
-                {/* CHỌN LỊCH ĐÃ ĐẶT */}
+                {/* KEEP: Giữ lại Picker (ẩn đi nếu không dùng) */}
+                {/* Nếu bạn không muốn hiển thị Picker, comment lại đoạn này */}
+                {/* 
                 <Text style={styles.label}>Chọn lịch đã đặt:</Text>
                 <View style={styles.pickerContainer}>
                     <Picker
@@ -102,6 +121,7 @@ export default function FeedbackScreen({ route, navigation }) {
                         ))}
                     </Picker>
                 </View>
+                */}
 
                 {/* ĐÁNH GIÁ SAO */}
                 <Text style={styles.label}>Đánh giá của bạn:</Text>
@@ -137,10 +157,10 @@ export default function FeedbackScreen({ route, navigation }) {
                 <TouchableOpacity
                     style={[
                         styles.submitBtn,
-                        (!selectedBooking || !rating || comment.trim().length < 10) && styles.disabled,
+                        (!bookingId || !rating || comment.trim().length < 10) && styles.disabled,
                     ]}
                     onPress={handleSubmit}
-                    disabled={!selectedBooking || !rating || comment.trim().length < 10}
+                    disabled={!bookingId || !rating || comment.trim().length < 10}
                 >
                     <Text style={styles.submitText}>Gửi đánh giá</Text>
                 </TouchableOpacity>

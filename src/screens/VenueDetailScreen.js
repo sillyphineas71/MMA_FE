@@ -176,7 +176,7 @@ export default function VenueDetailScreen({ route, navigation }) {
           onScroll={(e) => {
             const index = Math.round(
               e.nativeEvent.contentOffset.x /
-                e.nativeEvent.layoutMeasurement.width
+              e.nativeEvent.layoutMeasurement.width
             );
             setActiveImage(index);
           }}
@@ -264,11 +264,11 @@ export default function VenueDetailScreen({ route, navigation }) {
               id: firstActive._id,
               images:
                 Array.isArray(firstActive.images) &&
-                firstActive.images.length > 0
+                  firstActive.images.length > 0
                   ? firstActive.images
                   : Array.isArray(venue.images)
-                  ? venue.images
-                  : [],
+                    ? venue.images
+                    : [],
             });
           }}
           style={{ marginVertical: 16, opacity: allInactive ? 0.5 : 1 }}
