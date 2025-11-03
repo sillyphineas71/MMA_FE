@@ -9,7 +9,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-// 🔐 Auth context
+// Auth context
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 
 // 🎨 Theme
@@ -22,25 +22,24 @@ import VerifyEmailScreen from "./src/screens/VerifyEmailScreen";
 import ForgotPasswordScreen from "./src/screens/ForgotPasswordScreen";
 import ResetPasswordScreen from "./src/screens/ResetPasswordScreen";
 
-// 🧭 Admin & Owner stacks
+// Admin & Owner stacks
 import AdminStack from "./src/navigation/AdminStack";
 import OwnerStack from "./src/navigation/OwnerStack";
 
-// ⚽ Booking flow (Customer)
+// Booking flow (Customer)
 import HomeScreen from "./src/screens/HomeScreen";
 import VenueDetailScreen from "./src/screens/VenueDetailScreen";
 import SlotSelectionScreen from "./src/screens/SlotSelectionScreen";
 import HomeDashboardScreen from "./src/screens/HomeDashboardScreen";
 
-// 💳 Payment Screens
+// Payment Screens
 import PaymentSuccessScreen from "./src/screens/PaymentSuccessScreen";
 import PaymentFailScreen from "./src/screens/PaymentFailScreen";
 
 const Stack = createNativeStackNavigator();
 
-// ===============================================
-// 🔹 AUTH STACK (Login, Register, Forgot Password, v.v.)
-// ===============================================
+// AUTH STACK (Login, Register, Forgot Password, v.v.)
+
 function AuthStack() {
   return (
     <Stack.Navigator
@@ -56,14 +55,13 @@ function AuthStack() {
   );
 }
 
-// ===============================================
 // 🔹 APP STACK (sau khi login thành công)
-// ===============================================
+
 function AppStack() {
   const { user, signOut } = useAuth();
-  const navigation = useNavigation(); // ✅ lấy navigation để reset stack
+  const navigation = useNavigation(); //  lấy navigation để reset stack
 
-  // ✅ Đăng xuất và reset toàn bộ navigation về Login
+  //  Đăng xuất và reset toàn bộ navigation về Login
   const handleSignOut = async () => {
   try {
     await signOut(); // chỉ cần signOut, RootNavigator tự về Login
@@ -79,11 +77,11 @@ function AppStack() {
     </TouchableOpacity>
   );
 
-  // 🧩 Tùy vai trò người dùng
+  //  Tùy vai trò người dùng
   if (user?.role === "admin") return <AdminStack />;
   if (user?.role === "owner") return <OwnerStack />;
 
-  // 👤 Flow cho khách hàng
+  //  Flow cho khách hàng
   return (
     <Stack.Navigator
       initialRouteName="HomeDashboard"
@@ -137,9 +135,9 @@ function AppStack() {
   );
 }
 
-// ===============================================
-// 🔹 ROOT NAVIGATOR (phân nhánh giữa Auth / App)
-// ===============================================
+
+//  ROOT NAVIGATOR (phân nhánh giữa Auth / App)
+
 function RootNavigator() {
   const { user } = useAuth();
 
@@ -172,9 +170,9 @@ function RootNavigator() {
   );
 }
 
-// ===============================================
+
 // 🔹 APP ENTRY POINT
-// ===============================================
+
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -185,9 +183,8 @@ export default function App() {
   );
 }
 
-// ===============================================
-// 🔹 STYLES
-// ===============================================
+// STYLES
+
 const styles = StyleSheet.create({
   signOutButton: {
     marginRight: 15,

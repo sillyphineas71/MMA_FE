@@ -13,7 +13,7 @@ import {
   ActivityIndicator, // ✅ Thêm ActivityIndicator
   SafeAreaView, // ✅ SỬA LỖI TAI THỎ: Dùng SsafeAreaView của react-native
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 // ✅ SỬA LỖI TAI THỎ: Xóa import từ thư viện bên ngoài
 // import { SafeAreaView } from "react-native-safe-area-context";
@@ -32,7 +32,7 @@ const defaultWelcomeMessage = {
 };
 
 export default function HomeDashboardScreen({ navigation }) {
-  const { user } = useAuth(); //  truy cập user đăng nhập
+  const { user, signOut } = useAuth(); //  truy cập user đăng nhập
 
   // ✅ State cho Chatbot
   const [isChatVisible, setIsChatVisible] = useState(false);
@@ -127,6 +127,14 @@ export default function HomeDashboardScreen({ navigation }) {
       </View>
     );
   };
+  // Đăng xuất
+  const handleSignOut = async () => {
+    try {
+      await signOut(); // Context tự reset về Login
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
@@ -143,18 +151,25 @@ export default function HomeDashboardScreen({ navigation }) {
                 user?.name ||
                 user?.email?.split("@")[0] ||
                 "Player"}{" "}
-              👋
             </Text>
             <Text style={styles.subtitle}>Welcome back!</Text>
           </View>
 
-          <TouchableOpacity activeOpacity={0.8}>
-            <Ionicons
-              name="notifications-outline"
-              size={26}
-              color={palette.text}
-            />
-          </TouchableOpacity>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            {/* Nút thông báo */}
+            <TouchableOpacity activeOpacity={0.8} style={{ marginRight: 15 }}>
+              <Ionicons
+                name="notifications-outline"
+                size={26}
+                color={palette.text}
+              />
+            </TouchableOpacity>
+
+            {/*  Nút Logout */}
+            <TouchableOpacity onPress={handleSignOut} activeOpacity={0.8}>
+              <Feather name="log-out" size={22} color={palette.primaryDark} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search Bar */}
@@ -195,12 +210,10 @@ export default function HomeDashboardScreen({ navigation }) {
         {/* Grid buttons */}
         <View style={styles.grid}>
           {[
-            { label: "My Calendar", icon: "calendar-outline" },
-            { label: "Create Activity", icon: "add-circle-outline" },
-            { label: "Quick Book", icon: "flash-outline" },
-            { label: "Favourite Venues", icon: "heart-outline" },
-            { label: "Leaderboard", icon: "trophy-outline" },
-            { label: "Offers", icon: "pricetags-outline" },
+            { label: "My Profile", icon: "calendar-outline" },
+            { label: "History Booking", icon: "add-circle-outline" },
+            { label: "About Us", icon: "flash-outline" },
+            { label: "Support", icon: "heart-outline" },
           ].map((item) => (
             <TouchableOpacity
               key={item.label}
@@ -251,7 +264,11 @@ export default function HomeDashboardScreen({ navigation }) {
               {/* ✅ THÊM MỚI: Nhóm các nút header */}
               <View style={styles.chatHeaderButtons}>
                 <TouchableOpacity onPress={handleClearChat}>
-                  <Ionicons name="trash-outline" size={24} color={palette.sub} />
+                  <Ionicons
+                    name="trash-outline"
+                    size={24}
+                    color={palette.sub}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setIsChatVisible(false)}
@@ -489,4 +506,3 @@ const styles = StyleSheet.create({
     padding: 5,
   },
 });
-

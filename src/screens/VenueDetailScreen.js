@@ -26,8 +26,10 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GEMINI_API_KEY = "YOUR_GOOGLE_AI_API_KEY_HERE";
 
 // ✅ 3. KHỞI TẠO DỊCH VỤ AI
-  const genAI = new GoogleGenerativeAI('AIzaSyDfdRw4gBPdOQFH8G7ZvHLsO3EApUQ5ERo');
-const aiModel = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
+const aiModel = genAI
+  ? genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
+  : null;
 
 export default function VenueDetailScreen({ route, navigation }) {
   const { id } = route.params;
@@ -106,6 +108,10 @@ export default function VenueDetailScreen({ route, navigation }) {
   useEffect(() => {
     // Hàm này giờ sẽ gọi thẳng đến Google AI
     async function fetchAiSummary() {
+      if (!aiModel) {
+        setAiSummary(null);
+        return;
+      }
       if (reviews.length === 0) {
         setAiSummary(null);
         return;
@@ -144,7 +150,7 @@ export default function VenueDetailScreen({ route, navigation }) {
     }
 
     fetchAiSummary();
-  }, [reviews]); 
+  }, [reviews]);
 
   if (!venue)
     return (
@@ -362,7 +368,11 @@ export default function VenueDetailScreen({ route, navigation }) {
         {reviews.length > 0 && (
           <View style={styles.aiSummaryContainer}>
             <View style={styles.aiHeader}>
-              <Ionicons name="sparkles-sharp" size={20} color={palette.primary} />
+              <Ionicons
+                name="sparkles-sharp"
+                size={20}
+                color={palette.primary}
+              />
               <Text style={styles.aiTitle}>Tóm tắt bằng AI</Text>
             </View>
             {isSummaryLoading ? (
