@@ -21,6 +21,7 @@ export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("customer");
   const [loading, setLoading] = useState(false);
 
   const onRegister = async () => {
@@ -30,6 +31,7 @@ export default function RegisterScreen({ navigation }) {
         name,
         email,
         password,
+        role,
       });
       Alert.alert(
         "Thành công",
@@ -120,6 +122,47 @@ export default function RegisterScreen({ navigation }) {
               secure
               style={{ marginTop: spacing.md }}
             />
+
+            <View
+              style={{
+                flexDirection: "row",
+                marginTop: spacing.md,
+                justifyContent: "space-between",
+              }}
+            >
+              <TouchableOpacity
+                onPress={() => setRole("customer")}
+                style={[
+                  styles.roleBtn,
+                  role === "customer" && { backgroundColor: palette.primary },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.roleText,
+                    role === "customer" && { color: "#fff" },
+                  ]}
+                >
+                  Khách hàng
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setRole("owner")}
+                style={[
+                  styles.roleBtn,
+                  role === "owner" && { backgroundColor: palette.primary },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.roleText,
+                    role === "owner" && { color: "#fff" },
+                  ]}
+                >
+                  Chủ sân (Owner)
+                </Text>
+              </TouchableOpacity>
+            </View>
 
             <View style={[styles.rowCenter, { marginTop: spacing.sm }]}>
               <Ionicons
@@ -235,4 +278,14 @@ const styles = StyleSheet.create({
   },
   linkBtn: { alignItems: "center", padding: spacing.md },
   linkText: { color: palette.sub },
+  roleBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: palette.border,
+  },
+  roleText: { fontWeight: "700", color: palette.text },
 });

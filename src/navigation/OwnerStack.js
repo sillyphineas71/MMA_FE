@@ -17,6 +17,7 @@ import OwnerSubPitchCreateScreen from "../screens/OwnerSubPitchCreateScreen";
 import OwnerSubPitchEditScreen from "../screens/OwnerSubPitchEditScreen";
 import OwnerReviewListScreen from "../screens/OwnerReviewListScreen";
 import OwnerBookingsScreen from "../screens/OwnerBookingsScreen";
+import ProfileScreen from "../screens/ProfileScreen";
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -104,6 +105,16 @@ export default function OwnerStack() {
         name="Withdrawals"
         component={WithdrawalOwnerScreen}
         options={{ title: "Rút tiền" }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: "Hồ sơ",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-circle-outline" size={size} color={color} />
+          ),
+        }}
       />
     </Tab.Navigator>
   );
