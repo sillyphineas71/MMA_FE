@@ -17,7 +17,7 @@ function resolveBaseURL() {
     Constants.manifest2?.extra?.expoGo?.developer?.host ||
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
-  return "http://192.168.5.102:9999";
+  return "http://192.168.1.20:9999";
 }
 
 export const API_BASE = resolveBaseURL();
@@ -51,9 +51,8 @@ async function parseResponse(res) {
 export async function apiGet(path, params) {
   const hasQueryInPath = typeof path === "string" && path.includes("?");
   const qs = toQuery(params);
-  const url = `${API_BASE}${path}${
-    hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
-  }`;
+  const url = `${API_BASE}${path}${hasQueryInPath ? (qs ? `&${qs.slice(1)}` : "") : qs
+    }`;
   const token = await AsyncStorage.getItem("userToken");
 
   const headers = { Accept: "application/json" };
