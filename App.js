@@ -77,8 +77,12 @@ function AppStack() {
   };
 
   const SignOutButton = () => (
-    <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-      <Feather name="log-out" size={20} color={palette.primaryDark} />
+    <TouchableOpacity
+      onPress={handleSignOut}
+      activeOpacity={0.85}
+      style={styles.signOutButton}
+    >
+      <Feather name="log-out" size={18} color={palette.primaryDark} />
     </TouchableOpacity>
   );
 
