@@ -77,10 +77,15 @@ function AppStack() {
   };
 
   const SignOutButton = () => (
-    <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
-      <Feather name="log-out" size={20} color={palette.primaryDark} />
-    </TouchableOpacity>
-  );
+  <TouchableOpacity
+    onPress={handleSignOut}
+    activeOpacity={0.85}
+    style={styles.signOutButton}
+  >
+    <Feather name="log-out" size={18} color={palette.primaryDark} />
+  </TouchableOpacity>
+);
+
 
   //  Tùy vai trò người dùng
   if (user?.role === "admin") return <AdminStack />;
@@ -197,10 +202,10 @@ function RootNavigator() {
     <NavigationContainer
       linking={{
         prefixes: [
-          "exp://192.168.5.102:8081/--",
-          "exp://192.168.5.102:19000/--",
-          "http://192.168.5.102:8081",
-          "http://192.168.5.102:8081/#",
+          "exp://192.168.68.2:8081/--",
+          "exp://192.168.68.2:19000/--",
+          "http://192.168.68.2:8081",
+          "http://192.168.68.2:8081/#",
           "http://localhost:8081",
           "http://localhost:8081/#",
         ],
