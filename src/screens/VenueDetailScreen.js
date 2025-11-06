@@ -15,17 +15,17 @@ import { API_BASE } from "../config/api";
 import { palette, spacing } from "../theme/theme";
 import GradientButton from "../components/GradientButton";
 import ReviewCard from "../components/ReviewCard";
-// ✅ 1. IMPORT THƯ VIỆN GOOGLE AI
+// 1. IMPORT THƯ VIỆN GOOGLE AI
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// ✅ 2. THÊM API KEY CỦA BẠN VÀO ĐÂY
-// ⚠️ CẢNH BÁO: CHỈ DÙNG ĐỂ TEST. KHÔNG BAO GIỜ ĐƯA LÊN PRODUCTION!
+// 2. THÊM API KEY CỦA BẠN VÀO ĐÂY
+// CẢNH BÁO: CHỈ DÙNG ĐỂ TEST. KHÔNG BAO GIỜ ĐƯA LÊN PRODUCTION!
 // HÃY DÙNG BIẾN MÔI TRƯỜNG NẾU CÓ THỂ, HOẶC XÓA ĐI KHI BUILD APP
 const GEMINI_API_KEY = "AIzaSyDfdRw4gBPdOQFH8G7ZvHLsO3EApUQ5ERo";
 
-// ✅ 3. KHỞI TẠO DỊCH VỤ AI
+//  3. KHỞI TẠO DỊCH VỤ AI
 const genAI = GEMINI_API_KEY ? new GoogleGenerativeAI(GEMINI_API_KEY) : null;
 const aiModel = genAI
   ? genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" })
@@ -58,19 +58,36 @@ export default function VenueDetailScreen({ route, navigation }) {
         if (resSubs.ok) {
           const subsData = await resSubs.json();
           setSubPitches(Array.isArray(subsData) ? subsData : []);
-          // 3) Reviews for first sub-pitch (if any)
-          if (Array.isArray(subsData) && subsData.length > 0) {
-            const firstSub = subsData[0];
-            const resReviews = await fetch(
-              `${API_BASE}/api/sub-pitches/${firstSub._id}/reviews`
-            );
-            if (resReviews.ok) {
-              const reviewData = await resReviews.json();
-              setReviews(Array.isArray(reviewData) ? reviewData : []);
-            }
-          } else {
-            setReviews([]);
-          }
+
+        //  3) Lấy review của TẤT CẢ sân con thuộc venue (giới hạn 5 review)
+if (Array.isArray(subsData) && subsData.length > 0) {
+  const allReviews = [];
+
+  for (const sub of subsData) {
+    try {
+      const res = await fetch(`${API_BASE}/api/sub-pitches/${sub._id}/reviews`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          allReviews.push(...data);
+        }
+      }
+    } catch (err) {
+      console.warn(`❌ Không lấy được review của sân con ${sub._id}:`, err);
+    }
+  }
+
+  //  Chỉ giữ tối đa 5 review mới nhất
+  const limitedReviews = allReviews
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 5);
+
+  setReviews(limitedReviews);
+} else {
+  setReviews([]);
+}
+
+
         } else {
           setSubPitches([]);
           setReviews([]);
@@ -104,7 +121,7 @@ export default function VenueDetailScreen({ route, navigation }) {
     fetchData();
   }, [id]);
 
-  // ✅ 4. SỬA ĐỔI EFFECT NÀY ĐỂ GỌI TRỰC TIẾP GEMINI AI
+  //  4. SỬA ĐỔI EFFECT NÀY ĐỂ GỌI TRỰC TIẾP GEMINI AI
   useEffect(() => {
     // Hàm này giờ sẽ gọi thẳng đến Google AI
     async function fetchAiSummary() {

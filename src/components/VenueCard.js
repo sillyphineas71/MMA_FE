@@ -83,6 +83,9 @@ export default function VenueCard({ venue, onPress }) {
         style={styles.infoContainer}
       >
         <Text style={styles.name}>{venue.name}</Text>
+        {typeof venue.distance === "number" && (
+          <Text style={styles.distance}>📍 {venue.distance.toFixed(1)} km</Text>
+        )}
         <Text style={styles.address}>{venue.address}</Text>
         <Text style={styles.price}>
           💸{" "}
@@ -129,6 +132,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: palette.text,
+  },
+  distance: {
+    marginTop: 2,
+    color: palette.primary,
+    fontWeight: "600",
   },
   address: { color: palette.sub, marginVertical: 4 },
   price: { color: palette.primaryDark, fontWeight: "600" },
