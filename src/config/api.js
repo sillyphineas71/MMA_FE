@@ -17,11 +17,7 @@ function resolveBaseURL() {
     Constants.manifest2?.extra?.expoGo?.developer?.host ||
     Constants.manifest?.debuggerHost?.split(":")[0];
   if (hostFromExpo) return `http://${hostFromExpo}:9999`;
-<<<<<<< HEAD
   return "http://192.168.1.104:9999";
-=======
-  return "http://10.33.70.36:9999";
->>>>>>> 41ae5c7df5e1b6ca3f1f720b5174113772890c9e
 }
 
 export const API_BASE = resolveBaseURL();
