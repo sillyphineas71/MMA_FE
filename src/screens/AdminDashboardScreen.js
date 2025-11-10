@@ -21,7 +21,14 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 const screenWidth = Dimensions.get("window").width;
 
-// (chartConfig và hàm transformApiData giữ nguyên)
+// --- ĐỊNH NGHĨA NGÀY MẶC ĐỊNH BÊN NGOÀI ---
+// Lấy ngày hôm nay
+const defaultToDate = new Date();
+// Lấy ngày 30 ngày trước
+const defaultFromDate = new Date();
+defaultFromDate.setDate(defaultToDate.getDate() - 30);
+// -------------------------------------------
+
 const chartConfig = {
   backgroundColor: palette.card,
   backgroundGradientFrom: palette.card,
@@ -36,6 +43,7 @@ const chartConfig = {
     stroke: palette.primaryDark,
   },
 };
+
 const transformApiData = (apiData) => {
   const stats = {
     totalRevenue: (apiData.platformKpis.totalRevenue / 1000000).toFixed(1),
@@ -78,14 +86,16 @@ export default function AdminDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(FALLBACK_DATA_TRANSFORMED);
   const [error, setError] = useState(null);
-  const [fromDate, setFromDate] = useState(new Date("2025-10-01"));
-  const [toDate, setToDate] = useState(new Date("2025-10-30"));
+
+  // --- SỬ DỤNG CÁC GIÁ TRỊ MẶC ĐỊNH MỚI ---
+  const [fromDate, setFromDate] = useState(defaultFromDate);
+  const [toDate, setToDate] = useState(defaultToDate);
+  // --------------------------------------
 
   const [isPickerVisible, setIsPickerVisible] = useState(false);
   const [pickerMode, setPickerMode] = useState("from");
   const [tempDate, setTempDate] = useState(new Date());
 
-  // (fetchDashboard và useEffect giữ nguyên)
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -110,7 +120,6 @@ export default function AdminDashboardScreen() {
     fetchDashboard();
   }, [fetchDashboard]);
 
-  // (Các hàm modal giữ nguyên)
   const openPicker = (mode) => {
     setPickerMode(mode);
     setTempDate(mode === "from" ? fromDate : toDate);
@@ -118,10 +127,9 @@ export default function AdminDashboardScreen() {
   };
 
   const onPickerChange = (event, selectedDate) => {
-    // Thêm kiểm tra event.type để tránh lỗi trên Android
     if (event.type === "set" && selectedDate) {
       setTempDate(selectedDate);
-    } else if (selectedDate) {
+    } else if (Platform.OS === "ios" && selectedDate) {
       // Cho iOS (vẫn cập nhật khi cuộn)
       setTempDate(selectedDate);
     }
@@ -186,8 +194,7 @@ export default function AdminDashboardScreen() {
                 display="inline"
                 onChange={onPickerChange}
                 style={{ width: 320, height: 320 }}
-                // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI MÀU ---
-                textColor={palette.text}
+                textColor={palette.text} // Giữ lại dòng này để fix màu
               />
               <View style={styles.modalActions}>
                 <Pressable
@@ -207,7 +214,6 @@ export default function AdminDashboardScreen() {
           </View>
         </Modal>
 
-        {/* (Phần còn lại của JSX giữ nguyên) */}
         <View style={styles.statsRow}>
           <StatsCard
             title="Tổng Doanh thu"
@@ -260,7 +266,6 @@ export default function AdminDashboardScreen() {
   );
 }
 
-// (Styles giữ nguyên)
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: palette.bg },
   container: {

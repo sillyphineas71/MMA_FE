@@ -9,8 +9,8 @@ import {
   Dimensions,
   TouchableOpacity,
   Platform,
-  Modal, 
-  Pressable 
+  Modal,
+  Pressable,
 } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 import { apiGet } from "../config/api";
@@ -18,9 +18,17 @@ import { palette, shadow, radius, spacing } from "../theme/theme";
 import StatsCard from "../components/StatsCard";
 import { format, parseISO } from "date-fns";
 import { Feather } from "@expo/vector-icons";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 const screenWidth = Dimensions.get("window").width;
+
+// --- ĐỊNH NGHĨA NGÀY MẶC ĐỊNH BÊN NGOÀI ---
+// Lấy ngày hôm nay
+const defaultToDate = new Date();
+// Lấy ngày 30 ngày trước
+const defaultFromDate = new Date();
+defaultFromDate.setDate(defaultToDate.getDate() - 30);
+// -------------------------------------------
 
 // (chartConfig và hàm transformApiData giữ nguyên)
 const chartConfig = {
@@ -28,7 +36,7 @@ const chartConfig = {
   backgroundGradientFrom: palette.card,
   backgroundGradientTo: palette.card,
   decimalPlaces: 1,
-  color: (opacity = 1) => `rgba(125, 217, 87, ${opacity})`, 
+  color: (opacity = 1) => `rgba(125, 217, 87, ${opacity})`,
   labelColor: (opacity = 1) => `rgba(107, 114, 128, ${opacity})`,
   style: { borderRadius: radius.lg },
   propsForDots: {
@@ -38,54 +46,61 @@ const chartConfig = {
   },
 };
 const transformApiData = (apiData) => {
-  const completedBookings = 
-    apiData.kpis.bookingStatusCounts.find(s => s._id === "completed")?.count || 0;
-  const confirmedBookings = 
-    apiData.kpis.bookingStatusCounts.find(s => s._id === "confirmed")?.count || 0;
+  const completedBookings =
+    apiData.kpis.bookingStatusCounts.find((s) => s._id === "completed")?.count ||
+    0;
+  const confirmedBookings =
+    apiData.kpis.bookingStatusCounts.find((s) => s._id === "confirmed")?.count ||
+    0;
   const stats = {
     totalRevenue: (apiData.kpis.totalRevenue / 1000000).toFixed(1),
     totalBookings: apiData.kpis.totalBookings,
     completedBookings: completedBookings,
-    confirmedBookings: confirmedBookings
+    confirmedBookings: confirmedBookings,
   };
-  const chartLabels = apiData.revenueChartData.map(item => 
-    format(parseISO(item.date), 'dd/MM')
+  const chartLabels = apiData.revenueChartData.map((item) =>
+    format(parseISO(item.date), "dd/MM")
   );
-  const chartDataPoints = apiData.revenueChartData.map(item => 
-    item.revenue / 1000000
+  const chartDataPoints = apiData.revenueChartData.map(
+    (item) => item.revenue / 1000000
   );
   const revenueChart = {
     labels: chartLabels.length > 0 ? chartLabels : ["N/A"],
-    datasets: [{ 
-      data: chartDataPoints.length > 0 ? chartDataPoints : [0] 
-    }]
+    datasets: [{ data: chartDataPoints.length > 0 ? chartDataPoints : [0] }],
   };
-  const reviews = apiData.recentReviews.map(review => ({
+  const reviews = apiData.recentReviews.map((review) => ({
     id: review._id,
     name: review.userId.name,
     rating: review.rating,
     comment: review.comment,
-    date: format(parseISO(review.createdAt), 'dd/MM/yyyy')
+    date: format(parseISO(review.createdAt), "dd/MM/yyyy"),
   }));
   return { stats, revenueChart, reviews };
 };
 const FALLBACK_DATA_OWNER = {
-  stats: { totalRevenue: 0, totalBookings: 0, completedBookings: 0, confirmedBookings: 0 },
+  stats: {
+    totalRevenue: 0,
+    totalBookings: 0,
+    completedBookings: 0,
+    confirmedBookings: 0,
+  },
   revenueChart: { labels: ["N/A"], datasets: [{ data: [0] }] },
   reviews: [],
 };
-
 
 export default function OwnerDashboardScreen() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(FALLBACK_DATA_OWNER);
   const [error, setError] = useState(null);
-  const [fromDate, setFromDate] = useState(new Date("2025-10-01"));
-  const [toDate, setToDate] = useState(new Date("2025-10-30"));
-  
+
+  // --- SỬ DỤNG CÁC GIÁ TRỊ MẶC ĐỊNH MỚI ---
+  const [fromDate, setFromDate] = useState(defaultFromDate);
+  const [toDate, setToDate] = useState(defaultToDate);
+  // --------------------------------------
+
   const [isPickerVisible, setIsPickerVisible] = useState(false);
-  const [pickerMode, setPickerMode] = useState('from'); 
-  const [tempDate, setTempDate] = useState(new Date()); 
+  const [pickerMode, setPickerMode] = useState("from");
+  const [tempDate, setTempDate] = useState(new Date());
 
   // (fetchDashboard và useEffect giữ nguyên)
   const fetchDashboard = useCallback(async () => {
@@ -94,13 +109,15 @@ export default function OwnerDashboardScreen() {
     try {
       const from = format(fromDate, "yyyy-MM-dd");
       const to = format(toDate, "yyyy-MM-dd");
-      const rawApiData = await apiGet(`/api/owner/dashboard?from=${from}&to=${to}`);
+      const rawApiData = await apiGet(
+        `/api/owner/dashboard?from=${from}&to=${to}`
+      );
       const transformedData = transformApiData(rawApiData);
       setData(transformedData);
     } catch (e) {
       setError(e.message);
       Alert.alert("Lỗi tải dữ liệu", e.message + "\nSử dụng dữ liệu mẫu.");
-      setData(FALLBACK_DATA_OWNER); 
+      setData(FALLBACK_DATA_OWNER);
     } finally {
       setLoading(false);
     }
@@ -113,20 +130,21 @@ export default function OwnerDashboardScreen() {
   // (Các hàm modal giữ nguyên)
   const openPicker = (mode) => {
     setPickerMode(mode);
-    setTempDate(mode === 'from' ? fromDate : toDate);
+    setTempDate(mode === "from" ? fromDate : toDate);
     setIsPickerVisible(true);
   };
 
   const onPickerChange = (event, selectedDate) => {
-    if (event.type === 'set' && selectedDate) {
+    if (event.type === "set" && selectedDate) {
       setTempDate(selectedDate);
-    } else if (selectedDate) {
+    } else if (Platform.OS === "ios" && selectedDate) {
+      // Cập nhật cho iOS khi cuộn
       setTempDate(selectedDate);
     }
   };
 
   const onConfirmDate = () => {
-    if (pickerMode === 'from') {
+    if (pickerMode === "from") {
       setFromDate(tempDate);
     } else {
       setToDate(tempDate);
@@ -141,19 +159,32 @@ export default function OwnerDashboardScreen() {
   const { stats, revenueChart, reviews } = data;
 
   if (loading) {
-    return <View style={styles.center}><ActivityIndicator size="large" color={palette.primaryDark} /></View>;
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={palette.primaryDark} />
+      </View>
+    );
   }
 
   return (
     <ScrollView style={styles.screen}>
       <View style={styles.container}>
-        
         <View style={styles.dateFilterContainer}>
-          <TouchableOpacity onPress={() => openPicker('from')} style={styles.dateButton}>
-            <Text style={styles.dateText}>Từ: {format(fromDate, "dd/MM/yy")}</Text>
+          <TouchableOpacity
+            onPress={() => openPicker("from")}
+            style={styles.dateButton}
+          >
+            <Text style={styles.dateText}>
+              Từ: {format(fromDate, "dd/MM/yy")}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => openPicker('to')} style={styles.dateButton}>
-            <Text style={styles.dateText}>Đến: {format(toDate, "dd/MM/yy")}</Text>
+          <TouchableOpacity
+            onPress={() => openPicker("to")}
+            style={styles.dateButton}
+          >
+            <Text style={styles.dateText}>
+              Đến: {format(toDate, "dd/MM/yy")}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -171,48 +202,54 @@ export default function OwnerDashboardScreen() {
                 display="inline"
                 onChange={onPickerChange}
                 style={{ width: 320, height: 320 }}
-                textColor={palette.text} 
-                // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI ---
-                theme="light" 
+                textColor={palette.text}
+                // --- THÊM DÒNG NÀY ĐỂ SỬA LỖI --- (Bạn đã thêm)
+                // theme="light" // Prop này có thể không chuẩn, 'textColor' là đủ
               />
               <View style={styles.modalActions}>
-                <Pressable onPress={onCancelPicker} style={[styles.modalButton, styles.buttonCancel]}>
+                <Pressable
+                  onPress={onCancelPicker}
+                  style={[styles.modalButton, styles.buttonCancel]}
+                >
                   <Text style={styles.buttonCancelText}>Hủy</Text>
                 </Pressable>
-                <Pressable onPress={onConfirmDate} style={[styles.modalButton, styles.buttonConfirm]}>
+                <Pressable
+                  onPress={onConfirmDate}
+                  style={[styles.modalButton, styles.buttonConfirm]}
+                >
                   <Text style={styles.buttonConfirmText}>Xác nhận</Text>
                 </Pressable>
               </View>
             </View>
           </View>
         </Modal>
-        
+
         {/* (Phần còn lại của JSX giữ nguyên) */}
         <View style={styles.statsRow}>
-          <StatsCard 
-            title="Doanh thu sân" 
-            value={stats.totalRevenue} 
-            unit="Tr VNĐ" 
+          <StatsCard
+            title="Doanh thu sân"
+            value={stats.totalRevenue}
+            unit="Tr VNĐ"
             iconName="dollar-sign"
           />
-          <StatsCard 
-            title="Tổng lượt đặt" 
-            value={stats.totalBookings} 
-            unit="lượt" 
+          <StatsCard
+            title="Tổng lượt đặt"
+            value={stats.totalBookings}
+            unit="lượt"
             iconName="calendar"
           />
         </View>
         <View style={styles.statsRow}>
-          <StatsCard 
-            title="Đã hoàn thành" 
-            value={stats.completedBookings} 
-            unit="lượt" 
+          <StatsCard
+            title="Đã hoàn thành"
+            value={stats.completedBookings}
+            unit="lượt"
             iconName="check-circle"
           />
-          <StatsCard 
-            title="Chờ check-in" 
-            value={stats.confirmedBookings} 
-            unit="lượt" 
+          <StatsCard
+            title="Chờ check-in"
+            value={stats.confirmedBookings}
+            unit="lượt"
             iconName="clock"
           />
         </View>
@@ -231,9 +268,18 @@ export default function OwnerDashboardScreen() {
         <Text style={styles.sectionTitle}>Đánh giá gần đây</Text>
         <View style={styles.listContainer}>
           {reviews.map((item, index) => (
-            <View key={item.id} style={[styles.listItem, index === reviews.length - 1 && {marginBottom: 0, borderBottomWidth: 0}]}>
+            <View
+              key={item.id}
+              style={[
+                styles.listItem,
+                index === reviews.length - 1 && {
+                  marginBottom: 0,
+                  borderBottomWidth: 0,
+                },
+              ]}
+            >
               <View style={styles.listRankIcon}>
-                 <Feather name="star" size={20} color="#FFD700" />
+                <Feather name="star" size={20} color="#FFD700" />
               </View>
               <View style={styles.listInfo}>
                 <Text style={styles.listName}>{item.name}</Text>
@@ -254,63 +300,63 @@ export default function OwnerDashboardScreen() {
 // (Styles giữ nguyên)
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: palette.bg },
-  container: { 
-    padding: spacing.lg, 
-    paddingBottom: spacing.xxl, 
+  container: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xxl,
   },
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center", 
-    backgroundColor: palette.bg 
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: palette.bg,
   },
   dateFilterContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    marginBottom: spacing.md, 
+    marginBottom: spacing.md,
   },
   dateButton: {
     backgroundColor: palette.card,
-    paddingVertical: spacing.sm, 
-    paddingHorizontal: spacing.md, 
-    borderRadius: radius.lg, 
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    borderRadius: radius.lg,
     ...shadow.card,
     borderWidth: 1,
     borderColor: palette.border,
   },
-  dateText: { 
-    color: palette.text, 
-    fontSize: 14, 
-    fontWeight: "600" 
+  dateText: {
+    color: palette.text,
+    fontSize: 14,
+    fontWeight: "600",
   },
   statsRow: {
     flexDirection: "row",
-    marginHorizontal: -spacing.sm / 2, 
-    marginBottom: spacing.sm, 
+    marginHorizontal: -spacing.sm / 2,
+    marginBottom: spacing.sm,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "800",
     color: palette.text,
-    marginTop: spacing.lg, 
-    marginBottom: spacing.md, 
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   chartContainer: {
     ...shadow.card,
     backgroundColor: palette.card,
-    borderRadius: radius.lg, 
-    alignItems: 'center',
-    paddingTop: spacing.sm, 
+    borderRadius: radius.lg,
+    alignItems: "center",
+    paddingTop: spacing.sm,
   },
   chart: {
-    borderRadius: radius.lg, 
+    borderRadius: radius.lg,
   },
   listContainer: {
     backgroundColor: palette.card,
-    borderRadius: radius.lg, 
+    borderRadius: radius.lg,
     ...shadow.card,
-    paddingHorizontal: spacing.md, 
-    paddingVertical: spacing.sm, 
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   listItem: {
     flexDirection: "row",
@@ -321,13 +367,13 @@ const styles = StyleSheet.create({
   },
   listRankIcon: {
     width: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginTop: 2,
   },
   listInfo: {
     flex: 1,
-    marginLeft: spacing.sm, 
+    marginLeft: spacing.sm,
   },
   listName: {
     fontSize: 16,
@@ -340,7 +386,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   listRatingContainer: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
   },
   listRating: {
     fontSize: 16,
@@ -354,23 +400,23 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContent: {
     backgroundColor: palette.card,
     borderRadius: radius.lg,
     padding: spacing.lg,
-    alignItems: 'center',
+    alignItems: "center",
     ...shadow.card,
-    width: '90%', 
+    width: "90%",
     maxWidth: 340,
   },
   modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    width: '100%',
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    width: "100%",
     marginTop: spacing.md,
   },
   modalButton: {
@@ -384,13 +430,13 @@ const styles = StyleSheet.create({
   },
   buttonCancelText: {
     color: palette.sub,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   buttonConfirm: {
     backgroundColor: palette.primary,
   },
   buttonConfirmText: {
     color: palette.text,
-    fontWeight: '700',
+    fontWeight: "700",
   },
 });
