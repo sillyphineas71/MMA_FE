@@ -41,10 +41,6 @@ export default function ProfileScreen() {
         >
           <View style={styles.containerInner}>
             <View style={styles.card}>
-              <Image
-                source={{ uri: "https://placehold.co/120x120?text=Avatar" }}
-                style={styles.avatar}
-              />
               <Text style={styles.name}>{name}</Text>
               <Text style={styles.email}>{email}</Text>
               <View style={styles.badge}>
